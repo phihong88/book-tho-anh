@@ -239,6 +239,41 @@ input,textarea,select{font-family:inherit}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
 
+/* LỊCH */
+.srow{display:flex;gap:8px}
+.srow .sbox{flex:1;min-width:0}
+.date-f{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:40px;padding:0 6px 0 14px;height:42px;flex-shrink:0;border:1.5px solid transparent}
+.date-f.on{border-color:var(--p);background:#eff6ff}
+.date-f i{color:var(--p)}
+.date-f input{border:none;background:none;outline:none;font-size:13px;color:var(--tx);width:118px;font-family:inherit}
+.date-f button{border:none;background:none;color:var(--tx2);cursor:pointer;width:24px;height:24px;border-radius:50%}
+.free{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:11.5px;font-weight:700;color:#15803d;background:#dcfce7;padding:3px 9px;border-radius:10px}
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:14px}
+.cal-nav{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;color:var(--p)}
+.cal-nav:disabled{opacity:.3;cursor:default}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-w{text-align:center;font-size:11px;font-weight:700;color:var(--tx2);padding:3px 0}
+.cd{border:1.5px solid var(--bdr);border-radius:9px;padding:4px 1px 5px;text-align:center;cursor:pointer;background:#fff;transition:border-color .15s}
+.cd>span{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
+.cd-bars{display:flex;gap:2px;justify-content:center}
+.cd-bars i{font-style:normal;font-size:9px;font-weight:800;width:15px;height:14px;line-height:14px;border-radius:4px;background:#dcfce7;color:#15803d}
+.cd-bars i.x{background:#fee2e2;color:#dc2626}
+.cd.full{background:#fef2f2;border-color:#fecaca}
+.cd.past{opacity:.35;cursor:default}
+.cd.today>span{color:var(--p);text-decoration:underline}
+.cd.sel{border-color:var(--acc);box-shadow:0 0 0 2px #fecdd3}
+.cd:not(.past):hover{border-color:var(--p)}
+.cal-lg{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;font-size:11.5px;color:var(--tx2)}
+.cal-lg span{display:flex;align-items:center;gap:5px}
+.cal-lg b{display:inline-block;width:14px;height:14px;border-radius:4px;font-size:9px;line-height:14px;text-align:center}
+.cal-info{margin-top:10px;padding:11px 13px;border-radius:11px;background:var(--bg);font-size:13.5px}
+.cal-info .dl{font-weight:800;margin-bottom:7px}
+.slots{display:flex;gap:7px}
+.slot{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d}
+.slot.x{border-color:#fca5a5;background:#fef2f2;color:#dc2626}
+button.slot{cursor:pointer}
+.slot-all{width:100%;margin-top:7px;padding:9px;border-radius:10px;border:1.5px dashed var(--bdr);background:#fff;font-size:12.5px;font-weight:700;color:var(--tx);cursor:pointer}
+
 /* MOBILE PREVIEW CARD (bản đồ) */
 #mprev{display:none;position:absolute;left:10px;right:10px;bottom:12px;z-index:950;background:#fff;border-radius:16px;box-shadow:var(--shl);padding:12px;animation:fadeUp .25s ease}
 #mprev.on{display:block}
@@ -288,7 +323,11 @@ input,textarea,select{font-family:inherit}
   .sbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;font-size:15px;font-weight:800;color:#fff;text-decoration:none}
   .sbtn.call{background:var(--ok)}
   .sbtn.zalo{background:#0068ff}
-  .fg input,.fg textarea,.sbox input,.link-row input{font-size:16px}
+  .fg input,.fg textarea,.sbox input,.link-row input,.date-f input{font-size:16px}
+  .date-f input{width:112px}
+  .srow{flex-direction:column}
+  .srow .sbox{flex:none}
+  .date-f{align-self:flex-start}
   .frm{padding:12px 14px 24px}
   #lb{padding:10px}
   #lb-img{max-width:100vw;max-height:74vh}
@@ -296,6 +335,64 @@ input,textarea,select{font-family:inherit}
   #pick-bar{font-size:12px;top:10px}
   #toast{top:12px;font-size:13px;padding:10px 20px}
 }
+/* ===== BỐ CỤC MỚI: 3 tab, bản đồ là tab riêng, nội dung toàn màn hình ===== */
+body{flex-direction:column}
+#map-wrap{display:none;position:fixed;left:0;right:0;top:0;bottom:calc(60px + env(safe-area-inset-bottom));z-index:20;flex:none}
+body.m-map #map-wrap{display:block}
+#side{width:100%;flex:1;box-shadow:none;margin-bottom:calc(60px + env(safe-area-inset-bottom))}
+#bnav{display:flex}
+.bn{position:relative;gap:4px;color:#94a3b8;transition:color .2s}
+.bn svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bn span{font-size:10.5px;font-weight:700;letter-spacing:.2px}
+.bn.on{color:var(--p)}
+.bn.on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--p)}
+.bn.on svg{stroke-width:1.9}
+#bn-me{flex:0 0 88px;margin-left:auto;border-left:1px solid var(--bdr)}
+.bn img{width:26px;height:26px}
+#v-list{max-width:1100px;margin:0 auto}
+#v-detail,#v-album{max-width:780px;margin:0 auto}
+#p-me .view{max-width:620px;margin:0 auto}
+@media(min-width:821px){
+  #pro-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;padding:14px 16px 24px}
+  #mprev{right:auto;left:16px;width:400px}
+  #toast{top:20px}
+}
+/* seg + booking */
+.seg{display:flex;gap:6px;padding:10px 16px 0}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid var(--bdr);background:#fff;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer}
+.seg button.on{background:var(--p);border-color:var(--p);color:#fff}
+.slot.pick{background:#16a34a;border-color:#16a34a;color:#fff}
+.slot-all.pick{background:#16a34a;border-color:#16a34a;color:#fff}
+#pro-cal .btnp:disabled{cursor:not-allowed;background:#94a3b8;opacity:1}
+.d-full{margin-top:8px;font-size:13px;font-weight:700;color:var(--red)}
+.cal-hint{font-size:12px;color:var(--tx2);margin:-4px 0 10px}
+.sbtn.book{background:var(--acc);flex:1.4}
+button.sbtn{border:none;cursor:pointer}
+#bk-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:flex-end;justify-content:center}
+#bk-modal.on{display:flex}
+.bk-sheet{background:#fff;width:100%;max-width:480px;max-height:92vh;max-height:92dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));animation:fadeUp .25s ease}
+@media(min-width:821px){#bk-modal{align-items:center}.bk-sheet{border-radius:20px}}
+.bk-hd{display:flex;align-items:center;justify-content:space-between;font-size:17px;margin-bottom:12px}
+.bk-hd button{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);cursor:pointer}
+.bk-sum{display:flex;gap:12px;align-items:center;padding:10px;background:var(--bg);border-radius:12px;margin-bottom:12px;font-size:13px}
+.bk-sum .av{width:44px;height:44px;font-size:15px}
+.bk-sheet .fg input,.bk-sheet .fg textarea,.bk-sheet .fg select{font-size:16px}
+.bk-dep{padding:10px 12px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:11px;font-size:13px;color:#92400e;line-height:1.5}
+.bk-ok{text-align:center;font-size:15px;font-weight:800;color:var(--ok);margin-bottom:10px}
+.bk-ok i{font-size:34px;display:block;margin-bottom:6px}
+.pay-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13.5px}
+.pay-row span{color:var(--tx2)}
+.pay-row b{word-break:break-all;text-align:right}
+.pay-row button{border:none;background:var(--bg);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--p);cursor:pointer;flex-shrink:0}
+.pay-qr{display:block;width:210px;max-width:70%;margin:12px auto 4px;border-radius:12px;border:1px solid var(--bdr)}
+.bk-c{border:1.5px solid var(--bdr);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+.bk-r{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px}
+.bk-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.bk-m{font-size:12.5px;color:var(--tx2);margin-top:4px;line-height:1.5}
+.bk-m a{color:var(--p);font-weight:700}
+.bk-a{display:flex;gap:6px;margin-top:9px}
+.bkb{flex:1;padding:8px 6px;border-radius:9px;border:1.5px solid var(--bdr);background:#fff;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--tx)}
+.bkb.main{background:var(--p);border-color:var(--p);color:#fff}
 </style>
 </head>
 <body>
@@ -331,18 +428,16 @@ input,textarea,select{font-family:inherit}
 
 <!-- SIDE -->
 <div id="side">
-  <div id="ttabs">
-    <button class="ttab on" id="tt-exp" onclick="switchTab('exp')" title="Tìm thợ"><i class="fa fa-camera-retro"></i></button>
-    <button class="ttab" id="tt-me" onclick="switchTab('me')" title="Hồ sơ của tôi"><i class="fa fa-user-pen"></i></button>
-    <button class="ttab" id="tt-info" onclick="switchTab('info')" title="Thông tin"><i class="fa fa-circle-info"></i></button>
-  </div>
 
   <!-- ═════ EXPLORE ═════ -->
   <div class="panel on" id="p-exp">
     <div class="view on" id="v-list">
       <div class="ex-hd">
         <div class="ex-title"><h2><i class="fa fa-camera-retro"></i>Book thợ chụp ảnh</h2></div>
-        <div class="sbox"><i class="fa fa-magnifying-glass"></i><input id="q" type="text" placeholder="Tìm tên thợ, khu vực, dịch vụ..." oninput="renderList()"></div>
+        <div class="srow">
+          <div class="sbox"><i class="fa fa-magnifying-glass"></i><input id="q" type="text" placeholder="Tìm tên thợ, khu vực, dịch vụ..." oninput="renderList()"></div>
+          <label class="date-f" id="date-f" title="Lọc thợ còn trống lịch"><i class="fa fa-calendar-day"></i><input type="date" id="q-date" onchange="onDateFilter()"><button onclick="event.preventDefault();clearDate()" title="Bỏ lọc"><i class="fa fa-xmark"></i></button></label>
+        </div>
         <div class="chips" id="flt-chips"></div>
       </div>
       <div class="ex-meta"><span id="pro-count"></span><button class="sortbtn" id="sort-btn" onclick="locateMe()"><i class="fa fa-location-arrow"></i>Gần tôi</button></div>
@@ -373,7 +468,7 @@ input,textarea,select{font-family:inherit}
       <div class="login-card">
         <div class="ico"><i class="fa fa-camera"></i></div>
         <h3>Đăng nhập để tạo hồ sơ thợ ảnh</h3>
-        <button class="gbtn" onclick="doLogin()">
+        <button class="gbtn" onclick="doLogin('me')">
           <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
           Đăng nhập bằng Google
         </button>
@@ -387,7 +482,13 @@ input,textarea,select{font-family:inherit}
         <button class="iconbtn" onclick="viewMyPage()" title="Xem trang"><i class="fa fa-eye"></i></button>
         <button class="iconbtn" onclick="doLogout()" title="Đăng xuất" style="color:var(--red)"><i class="fa fa-right-from-bracket"></i></button>
       </div>
-      <div class="frm">
+      <div class="seg"><button id="sg-bk" onclick="setSeg('bk')"><i class="fa fa-calendar-check"></i> Lịch đặt</button><button id="sg-pf" class="on" onclick="setSeg('pf')"><i class="fa fa-camera"></i> Hồ sơ thợ ảnh</button></div>
+      <div class="frm" id="seg-bk" style="display:none">
+        <div class="sdiv"><i class="fa fa-calendar-check"></i>Lịch tôi đã đặt</div>
+        <div id="bk-mine"></div>
+        <div id="bk-prosec"><div class="sdiv"><i class="fa fa-user-clock"></i>Khách đặt lịch của tôi (thợ ảnh)</div><div id="bk-pro"></div></div>
+      </div>
+      <div class="frm" id="seg-pf">
         <div class="av-edit">
           <div class="av" id="f-av-prev" onclick="pickAvatar()" title="Đổi ảnh đại diện"></div>
           <div class="fg"><label>Tên hiển thị / Studio</label><input id="f-name" type="text" placeholder="Vd: Hoàng Studio"></div>
@@ -418,9 +519,21 @@ input,textarea,select{font-family:inherit}
         <div class="svc-chips" id="f-svcs"></div>
         <div class="fg" style="margin-top:11px"><label>Giá tham khảo</label><input id="f-price" type="text" placeholder="Vd: Từ 500.000đ/buổi"></div>
         <div class="fg"><label>Giới thiệu</label><textarea id="f-bio" rows="4" placeholder="Kinh nghiệm, phong cách chụp, thiết bị..."></textarea></div>
+        <div class="sdiv"><i class="fa fa-wallet"></i>Thanh toán &amp; đặt cọc</div>
+        <div class="fg"><label>Ngân hàng nhận cọc</label><select id="f-bank"></select></div>
+        <div class="rw2">
+          <div class="fg"><label>Số tài khoản</label><input id="f-accno" type="text" inputmode="numeric" placeholder="Số tài khoản"></div>
+          <div class="fg"><label>Tiền cọc / lịch (đ)</label><input id="f-deposit" type="text" inputmode="numeric" placeholder="Vd: 300000"></div>
+        </div>
+        <div class="fg"><label>Tên chủ tài khoản</label><input id="f-accname" type="text" placeholder="NGUYEN VAN A"></div>
+        <div class="fg"><label>Ghi chú thanh toán (Momo, ví khác...)</label><input id="f-paynote" type="text" placeholder="Không bắt buộc"></div>
+
         <label class="toggle">Hiển thị công khai trên bản đồ<span class="sw"><input type="checkbox" id="f-visible" checked><span></span></span></label>
 
         <button class="btnp" id="btn-save" onclick="saveProfile()"><i class="fa fa-floppy-disk"></i>Lưu hồ sơ</button>
+
+        <div class="sdiv"><i class="fa fa-calendar-days"></i>Lịch đã kín</div>
+        <div id="me-cal"></div>
 
         <div class="sdiv"><i class="fa fa-images"></i>Album ảnh mẫu<span class="sp"></span><button class="addbtn" onclick="openAlbumEditor(-1)"><i class="fa fa-plus"></i> Album</button></div>
         <div id="my-albums"></div>
@@ -447,23 +560,15 @@ input,textarea,select{font-family:inherit}
     </div>
   </div>
 
-  <!-- ═════ INFO ═════ -->
-  <div class="panel" id="p-info">
-    <div class="info">
-      <h2>Book thợ chụp ảnh</h2>
-      <p>Tác giả: Phi Hồng</p>
-      <p>SĐT/Zalo: 0971318088</p>
-    </div>
-  </div>
 </div>
 
 <nav id="bnav">
-  <button class="bn on" id="bn-exp" onclick="bnav('exp')"><i class="fa fa-camera-retro"></i><span>Tìm thợ</span></button>
-  <button class="bn" id="bn-map" onclick="bnav('map')"><i class="fa fa-map-location-dot"></i><span>Bản đồ</span></button>
-  <button class="bn" id="bn-me" onclick="bnav('me')"><i class="fa fa-user-pen"></i><span>Hồ sơ</span></button>
-  <button class="bn" id="bn-info" onclick="bnav('info')"><i class="fa fa-circle-info"></i><span>Thông tin</span></button>
+  <button class="bn on" id="bn-exp" onclick="bnav('exp')"><svg viewBox="0 0 24 24"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h5.6a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Tìm thợ</span></button>
+  <button class="bn" id="bn-map" onclick="bnav('map')"><svg viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.7 5.5-2.2V4.5L15 6.7z"/><path d="M9 4v13.3M15 6.7V20"/></svg><span>Bản đồ</span></button>
+  <button class="bn" id="bn-me" onclick="bnav('me')" title="Hồ sơ của tôi"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg><span>Hồ sơ</span></button>
 </nav>
 
+<div id="bk-modal" onclick="if(event.target===this)closeBk()"><div class="bk-sheet" id="bk-sheet"></div></div>
 <input type="file" id="file-av" accept="image/*" hidden onchange="onAvatarFile(this)">
 <input type="file" id="file-ph" accept="image/*" multiple hidden onchange="onPhotoFiles(this)">
 
@@ -476,6 +581,10 @@ input,textarea,select{font-family:inherit}
    rules_version = '2';
    service cloud.firestore {
      match /databases/{database}/documents {
+       match /bookings/{id} {
+         allow create: if request.auth != null && request.resource.data.custUid == request.auth.uid;
+         allow read, update: if request.auth != null && (resource.data.custUid == request.auth.uid || resource.data.proId == request.auth.uid);
+       }
        match /photographers/{uid} {
          allow read: if true;
          allow write: if request.auth != null && request.auth.uid == uid;
@@ -538,7 +647,7 @@ function coverOf(al) { return al.cover && (al.photos || []).find(x => x.u === al
 let Store;
 if (!DEMO) {
   firebase.initializeApp(FIREBASE_CONFIG);
-  const auth = firebase.auth(), db = firebase.firestore(), col = db.collection('photographers');
+  const auth = firebase.auth(), db = firebase.firestore(), col = db.collection('photographers'), bcol = db.collection('bookings');
   Store = {
     listen(cb) {
       col.onSnapshot(s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))),
@@ -556,7 +665,11 @@ if (!DEMO) {
         else if (e.code !== 'auth/popup-closed-by-user') throw e;
       }
     },
-    logout() { return auth.signOut(); }
+    logout() { return auth.signOut(); },
+    async addBk(b) { return (await bcol.add(b)).id; },
+    async myBks(uid) { return (await bcol.where('custUid', '==', uid).get()).docs.map(d => ({ ...d.data(), id: d.id })); },
+    async proBks(uid) { return (await bcol.where('proId', '==', uid).get()).docs.map(d => ({ ...d.data(), id: d.id })); },
+    async updBk(id, patch) { await bcol.doc(id).update(patch); }
   };
 } else {
   const DKEY = 'BOOKTHO_DEMO_V2', DUSER = 'BOOKTHO_DEMO_USER';
@@ -574,7 +687,11 @@ if (!DEMO) {
     async remove(uid) { const all = load(); delete all[uid]; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
     onAuth(cb) { authCb = cb; let u = null; try { u = JSON.parse(localStorage.getItem(DUSER)); } catch {} cb(u); },
     async login() { const u = { uid: 'demo_user', name: 'Thợ ảnh Demo', email: 'demo@gmail.com', photo: '' }; localStorage.setItem(DUSER, JSON.stringify(u)); authCb(u); },
-    async logout() { localStorage.removeItem(DUSER); authCb(null); }
+    async logout() { localStorage.removeItem(DUSER); authCb(null); },
+    async addBk(b) { const a = JSON.parse(localStorage.getItem('BOOKTHO_DEMO_BK') || '{}'), id = uid8(); a[id] = { ...b, id }; localStorage.setItem('BOOKTHO_DEMO_BK', JSON.stringify(a)); return id; },
+    async myBks(uid) { return Object.values(JSON.parse(localStorage.getItem('BOOKTHO_DEMO_BK') || '{}')).filter(b => b.custUid === uid); },
+    async proBks(uid) { return Object.values(JSON.parse(localStorage.getItem('BOOKTHO_DEMO_BK') || '{}')).filter(b => b.proId === uid); },
+    async updBk(id, patch) { const a = JSON.parse(localStorage.getItem('BOOKTHO_DEMO_BK') || '{}'); if (a[id]) Object.assign(a[id], patch); localStorage.setItem('BOOKTHO_DEMO_BK', JSON.stringify(a)); }
   };
 }
 
@@ -586,7 +703,7 @@ const lSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/W
 const lStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
 lSat.addTo(map);
 let isSat = true;
-const isMob = () => matchMedia('(max-width:820px)').matches;
+const isMob = () => true;   // bản đồ luôn là tab riêng (cả desktop lẫn mobile)
 let pendingView = null;
 const mapVisible = () => !isMob() || document.body.classList.contains('m-map');
 function flyTo(ll, z) { if (!mapVisible()) { pendingView = { ll, z }; return; } map.flyTo(ll, z, { duration: 1 }); }
@@ -602,11 +719,13 @@ function setMapMode(on) {
 }
 function bnav(t) {
   if (t === 'map') { if (curTab !== 'exp') switchTab('exp'); setMapMode(true); return; }
+  const was = curTab === t && !document.body.classList.contains('m-map');
   setMapMode(false); switchTab(t);
+  if (was && t === 'exp') showList();
 }
 function updateBnav() {
   const m = document.body.classList.contains('m-map');
-  ['exp', 'map', 'me', 'info'].forEach(t => $('#bn-' + t).classList.toggle('on', m ? t === 'map' : t === curTab));
+  ['exp', 'map', 'me'].forEach(t => $('#bn-' + t).classList.toggle('on', m ? t === 'map' : t === curTab));
 }
 window.addEventListener('resize', () => { if (!isMob()) document.body.classList.remove('m-map'); map.invalidateSize(); });
 function toggleLayer() {
@@ -630,7 +749,7 @@ const visiblePros = () => pros.filter(p => p.visible !== false && p.name);
 /* ══════════ TABS ══════════ */
 function switchTab(id) {
   curTab = id;
-  ['exp', 'me', 'info'].forEach(t => { $('#tt-' + t).classList.toggle('on', t === id); $('#p-' + t).classList.toggle('on', t === id); });
+  ['exp', 'me'].forEach(t => $('#p-' + t).classList.toggle('on', t === id));
   if (id !== 'me') { stopPick(); removeEditMarker(); }
   else placeEditMarker();
   renderMarkers(); updateBnav();
@@ -640,6 +759,98 @@ function showView(panel, id) {
   $('#' + panel).scrollTop = 0;
 }
 
+/* ══════════ LỊCH CHỤP ══════════ */
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayStr = () => ymd(new Date());
+const monthOf = ds => { const [y, m] = ds.split('-').map(Number); return new Date(y, m - 1, 1); };
+const busyOf = (p, d) => ((p && p.busy && p.busy[d]) || []);
+const WDN = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+function dayLabel(ds) { const [y, m, d] = ds.split('-').map(Number); return `${WDN[new Date(y, m - 1, d).getDay()]}, ${pad(d)}/${pad(m)}/${y}`; }
+function dayShort(ds) { const [, m, d] = ds.split('-'); return `${d}/${m}`; }
+function freeTxt(p, d) { const b = busyOf(p, d); return !b.length ? 'cả ngày' : b.includes('s') ? 'buổi chiều' : 'buổi sáng'; }
+let bkSlot = null;
+const calM = { pro: monthOf(todayStr()), me: monthOf(todayStr()) }, calSel = { pro: null, me: null };
+
+function calHtml(busy, month, mode, sel) {
+  const y = month.getFullYear(), m = month.getMonth();
+  const start = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate(), t = todayStr();
+  const now = monthOf(t), atMin = y === now.getFullYear() && m === now.getMonth();
+  let h = `<div class="cal-hd"><button class="cal-nav" onclick="calNav('${mode}',-1)" ${atMin ? 'disabled' : ''}><i class="fa fa-chevron-left"></i></button>
+    <b>Tháng ${m + 1}/${y}</b><button class="cal-nav" onclick="calNav('${mode}',1)"><i class="fa fa-chevron-right"></i></button></div><div class="cal-g">`;
+  h += ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(x => `<div class="cal-w">${x}</div>`).join('');
+  for (let i = 0; i < start; i++) h += '<div></div>';
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${pad(m + 1)}-${pad(d)}`, b = busy[ds] || [], past = ds < t;
+    const full = b.includes('s') && b.includes('c');
+    h += `<div class="cd${past ? ' past' : ''}${ds === t ? ' today' : ''}${full ? ' full' : ''}${sel === ds ? ' sel' : ''}"${past ? '' : ` onclick="calPick('${mode}','${ds}')"`}>
+      <span>${d}</span><div class="cd-bars"><i class="${b.includes('s') ? 'x' : ''}">S</i><i class="${b.includes('c') ? 'x' : ''}">C</i></div></div>`;
+  }
+  return h + `</div><div class="cal-lg"><span><b style="background:#dcfce7;color:#15803d">S</b>Sáng</span><span><b style="background:#dcfce7;color:#15803d">C</b>Chiều</span>
+    <span><b style="background:#dcfce7"></b>Còn trống</span><span><b style="background:#fee2e2"></b>Đã kín</span></div>`;
+}
+function calNav(mode, dir) {
+  const c = calM[mode], n = new Date(c.getFullYear(), c.getMonth() + dir, 1);
+  if (n < monthOf(todayStr())) return;
+  calM[mode] = n; mode === 'pro' ? renderProCal() : renderMeCal();
+}
+function calPick(mode, ds) { bkSlot = null; calSel[mode] = calSel[mode] === ds && mode === 'pro' ? null : ds; mode === 'pro' ? renderProCal() : renderMeCal(); }
+function slotHtml(b, tag) {
+  const s = b.includes('s'), c = b.includes('c');
+  return `<div class="slots">
+    <${tag} class="slot${s ? ' x' : ''}"${tag === 'button' ? ` onclick="toggleSlot('s')"` : ''}><i class="fa fa-sun"></i>Sáng: ${s ? 'Đã kín' : 'Còn trống'}</${tag}>
+    <${tag} class="slot${c ? ' x' : ''}"${tag === 'button' ? ` onclick="toggleSlot('c')"` : ''}><i class="fa fa-cloud-sun"></i>Chiều: ${c ? 'Đã kín' : 'Còn trống'}</${tag}></div>`;
+}
+function slotBtn(k, free, ic, t) {
+  return free ? `<button class="slot${bkSlot === k || bkSlot === 'a' ? ' pick' : ''}" onclick="pickSlot('${k}')"><i class="fa ${ic}"></i>${t}: Còn trống</button>`
+              : `<div class="slot x"><i class="fa ${ic}"></i>${t}: Đã kín</div>`;
+}
+function pickSlot(k) { bkSlot = bkSlot === k ? null : k; renderProCal(); }
+function renderProCal() {
+  const el = $('#pro-cal'); if (!el || !curPro) return;
+  const busy = curPro.busy || {}, sel = calSel.pro;
+  let info = '';
+  if (sel) {
+    const b = busy[sel] || [], fs = !b.includes('s'), fc = !b.includes('c');
+    info = `<div class="cal-info"><div class="dl">${dayLabel(sel)}</div>
+      <div class="slots">${slotBtn('s', fs, 'fa-sun', 'Sáng')}${slotBtn('c', fc, 'fa-cloud-sun', 'Chiều')}</div>
+      ${fs && fc ? `<button class="slot-all${bkSlot === 'a' ? ' pick' : ''}" onclick="pickSlot('a')">Cả ngày (sáng + chiều)</button>` : ''}
+      ${fs || fc ? `<button class="btnp" onclick="startBooking()" ${bkSlot ? '' : 'disabled'}><i class="fa fa-calendar-check"></i>${bkSlot ? 'Đặt lịch chụp ' + dayShort(sel) : 'Chọn buổi để đặt lịch'}</button>` : `<div class="d-full">Ngày này thợ đã kín lịch</div>`}</div>`;
+  }
+  el.innerHTML = calHtml(busy, calM.pro, 'pro', sel) + info;
+}
+function renderMeCal() {
+  const el = $('#me-cal'); if (!el || !myData) return;
+  const busy = myData.busy || {}, sel = calSel.me;
+  const b = sel ? (busy[sel] || []) : [], full = b.length === 2;
+  el.innerHTML = calHtml(busy, calM.me, 'me', sel) + (sel ? `<div class="cal-info"><div class="dl">${dayLabel(sel)}</div>${slotHtml(b, 'button')}
+    <button class="slot-all" onclick="toggleSlot('all')"><i class="fa ${full ? 'fa-lock-open' : 'fa-lock'}"></i> ${full ? 'Mở lại cả ngày' : 'Kín cả ngày'}</button></div>` : '');
+}
+let busySaveT;
+function toggleSlot(k) {
+  const d = calSel.me; if (!d) return;
+  const busy = myData.busy || (myData.busy = {});
+  let b = new Set(busy[d] || []);
+  if (k === 'all') b = b.size === 2 ? new Set() : new Set(['s', 'c']);
+  else b.has(k) ? b.delete(k) : b.add(k);
+  if (b.size) busy[d] = [...b]; else delete busy[d];
+  renderMeCal();
+  clearTimeout(busySaveT);
+  busySaveT = setTimeout(async () => {
+    collectForm();
+    if (!myData.name) return toast('⚠ Nhập tên và bấm Lưu hồ sơ trước', '#d97706');
+    try { await persist(); toast('✔ Đã cập nhật lịch', '#059669'); }
+    catch (e) { toast('Lỗi lưu lịch: ' + (e.code || e.message), '#dc2626'); }
+  }, 900);
+}
+function onDateFilter() {
+  const v = $('#q-date').value;
+  if (v && v < todayStr()) { $('#q-date').value = ''; toast('Chọn ngày từ hôm nay trở đi', '#d97706'); }
+  $('#date-f').classList.toggle('on', !!$('#q-date').value);
+  renderList();
+}
+function clearDate() { $('#q-date').value = ''; onDateFilter(); }
+
 /* ══════════ EXPLORE: LIST ══════════ */
 function renderChips() {
   $('#flt-chips').innerHTML = ['', ...SERVICES].map(s =>
@@ -648,9 +859,10 @@ function renderChips() {
 function setFilter(s) { curFilter = s; renderChips(); renderList(); }
 
 function renderList() {
-  const q = norm($('#q').value);
+  const q = norm($('#q').value), dateF = $('#q-date').value;
   let arr = visiblePros().filter(p =>
     (!curFilter || (p.services || []).includes(curFilter)) &&
+    (!dateF || busyOf(p, dateF).length < 2) &&
     (!q || norm([p.name, p.address, p.bio, (p.services || []).join(' '), (p.albums || []).map(a => a.title).join(' ')].join(' ')).includes(q)));
   if (userLoc) {
     arr.forEach(p => p._d = isNum(p.lat) ? km(userLoc, [p.lat, p.lng]) : 1e9);
@@ -668,6 +880,7 @@ function renderList() {
         <div class="pc-name">${esc(p.name)}</div>
         <div class="pc-addr"><i class="fa fa-location-dot" style="color:var(--acc);font-size:10px"></i> ${esc(p.address || 'Chưa cập nhật địa chỉ')}</div>
         ${(p.services || []).length ? `<div class="pc-tags">${p.services.slice(0, 3).map(tagHtml).join('')}${p.services.length > 3 ? `<span class="tag">+${p.services.length - 3}</span>` : ''}</div>` : ''}
+        ${dateF ? `<div class="free"><i class="fa fa-calendar-check"></i>${dayShort(dateF)}: trống ${freeTxt(p, dateF)}</div>` : ''}
         ${thumbs ? `<div class="pc-strip">${thumbs}</div>` : ''}
       </div>
       <div class="pc-side">
@@ -686,6 +899,10 @@ function showList() {
 /* ══════════ EXPLORE: DETAIL ══════════ */
 function openPro(id, fly = true) {
   const p = pros.find(x => x.id === id); if (!p) return;
+  if (!curPro || curPro.id !== p.id) {
+    const f = $('#q-date').value;
+    calSel.pro = f || null; calM.pro = f ? monthOf(f) : monthOf(todayStr()); bkSlot = null;
+  }
   curPro = p;
   if (curTab !== 'exp') switchTab('exp');
   renderDetail();
@@ -719,10 +936,16 @@ function renderDetail() {
       ${p.bio ? `<div class="d-bio">${esc(p.bio)}</div>` : ''}
       ${(p.services || []).length ? `<div class="d-row">${p.services.map(tagHtml).join('')}</div>` : ''}
       ${p.price ? `<div class="d-price"><i class="fa fa-tag"></i>${esc(p.price)}</div>` : ''}
+      ${p.pay && p.pay.deposit ? `<div class="d-price" style="color:#b45309;background:#fffbeb;margin-left:6px"><i class="fa fa-wallet"></i>Cọc giữ lịch: ${money(p.pay.deposit)}</div>` : ''}
       ${phone || p.email ? `<div style="margin-top:12px;font-size:13px;color:var(--tx2);line-height:1.9">
         ${phone ? `<div><i class="fa fa-phone" style="width:18px"></i>${esc(p.phone)}</div>` : ''}
         ${p.email ? `<div><i class="fa fa-envelope" style="width:18px"></i><a href="mailto:${esc(p.email)}" style="color:var(--p)">${esc(p.email)}</a></div>` : ''}
       </div>` : ''}
+    </div>
+    <div class="d-sec">
+      <div class="sec-t"><i class="fa fa-calendar-days"></i>Lịch chụp</div>
+      <div class="cal-hint">Chọn ngày còn trống, chọn buổi rồi bấm Đặt lịch chụp.</div>
+      <div id="pro-cal"></div>
     </div>
     <div class="d-sec">
       <div class="sec-t"><i class="fa fa-images"></i>Album ảnh mẫu (${albs.length})</div>
@@ -733,10 +956,12 @@ function renderDetail() {
           <div class="alb-t">${esc(a.title || 'Album')}</div></div>`;
       }).join('')}</div>` : `<div class="empty" style="padding:24px"><i class="fa fa-images"></i>Chưa có album</div>`}
     </div>
-    ${phone || zalo ? `<div class="d-sticky">
-      ${phone ? `<a class="sbtn call" href="tel:${esc(phone)}"><i class="fa fa-phone"></i>Gọi ngay</a>` : ''}
-      ${zalo ? `<a class="sbtn zalo" href="https://zalo.me/${esc(zalo.replace(/^\+84/, '0'))}" target="_blank" rel="noopener"><i class="fa fa-comment-dots"></i>Nhắn Zalo</a>` : ''}
+    ${true ? `<div class="d-sticky">
+      <button class="sbtn book" onclick="goBook()"><i class="fa fa-calendar-check"></i>Đặt lịch</button>
+      ${phone ? `<a class="sbtn call" href="tel:${esc(phone)}"><i class="fa fa-phone"></i>Gọi</a>` : ''}
+      ${zalo ? `<a class="sbtn zalo" href="https://zalo.me/${esc(zalo.replace(/^\+84/, '0'))}" target="_blank" rel="noopener"><i class="fa fa-comment-dots"></i>Zalo</a>` : ''}
     </div>` : ''}`;
+  renderProCal();
 }
 let curAlbumIdx = -1;
 function openAlbum(i) {
@@ -849,7 +1074,10 @@ $('#lb').addEventListener('touchstart', e => tx0 = e.touches[0].clientX, { passi
 $('#lb').addEventListener('touchend', e => { if (tx0 == null) return; const dx = e.changedTouches[0].clientX - tx0; if (Math.abs(dx) > 50) lbNav(dx < 0 ? 1 : -1); tx0 = null; });
 
 /* ══════════ AUTH ══════════ */
-async function doLogin() {
+let loginIntent = '';
+async function doLogin(from) {
+  loginIntent = from || '';
+  if (location.protocol === 'file:' && !DEMO) return toast('Đăng nhập Google chỉ chạy khi mở trang trên mạng (https://phigong88.github.io/...)', '#d97706');
   try { await Store.login(); }
   catch (e) {
     const m = e.code === 'auth/unauthorized-domain' ? 'Tên miền chưa được cho phép trong Firebase Auth' : (e.message || e.code);
@@ -859,28 +1087,29 @@ async function doLogin() {
 async function doLogout() { if (!confirm('Đăng xuất?')) return; await Store.logout(); toast('Đã đăng xuất'); }
 function defaultProfile(u) {
   return { name: u.name || '', avatar: u.photo || '', phone: '', zalo: '', fb: '', email: u.email || '', address: '',
-    lat: null, lng: null, services: [], price: '', bio: '', visible: true, albums: [] };
+    lat: null, lng: null, services: [], price: '', bio: '', visible: true, albums: [], busy: {}, pay: {} };
 }
+const IC_USER = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg>';
+const meNav = av => (av ? `<img src="${esc(av)}" referrerpolicy="no-referrer" alt="">` : IC_USER) + '<span>Hồ sơ</span>';
 async function onAuthChanged(u) {
   me = u;
-  const tab = $('#tt-me');
   if (!u) {
-    myData = null; tab.innerHTML = '<i class="fa fa-user-pen"></i>'; $('#bn-me').innerHTML = '<i class="fa fa-user-pen"></i><span>Hồ sơ</span>';
+    myData = null; $('#bn-me').innerHTML = meNav('');
     showView('p-me', 'v-login'); removeEditMarker(); renderMarkers(); return;
   }
   try { myData = await Store.get(u.uid); } catch (e) { toast('Lỗi đọc hồ sơ: ' + (e.code || e.message), '#dc2626'); }
   const isNew = !myData;
   if (isNew) myData = defaultProfile(u);
   delete myData.id; delete myData.updatedAt;
-  myData.albums = myData.albums || []; myData.services = myData.services || [];
-  const av = safeUrl(myData.avatar || u.photo);
-  tab.innerHTML = av ? `<img src="${esc(av)}" referrerpolicy="no-referrer" alt="">` : '<i class="fa fa-user-check"></i>';
-  $('#bn-me').innerHTML = tab.innerHTML + '<span>Hồ sơ</span>';
+  myData.albums = myData.albums || []; myData.services = myData.services || []; myData.busy = myData.busy || {}; myData.pay = myData.pay || {};
+  $('#bn-me').innerHTML = meNav(safeUrl(myData.avatar || u.photo));
   fillForm();
   showView('p-me', 'v-edit');
-  if (isNew) { setMapMode(false); switchTab('me'); toast('Chào ' + (u.name || 'bạn') + '! Hãy hoàn thiện hồ sơ', '#059669'); }
+  setSeg(isNew ? 'bk' : 'pf');
+  if (isNew && loginIntent === 'me') { setMapMode(false); switchTab('me'); setSeg('pf'); toast('Chào ' + (u.name || 'bạn') + '! Hãy hoàn thiện hồ sơ', '#059669'); }
   else if (curTab === 'me') placeEditMarker();
-  renderMarkers();
+  loginIntent = '';
+  renderMarkers(); loadBks(); tryResume();
 }
 
 /* ══════════ PROFILE FORM ══════════ */
@@ -891,7 +1120,7 @@ function fillForm() {
   $('#f-name').value = d.name || ''; $('#f-phone').value = d.phone || ''; $('#f-zalo').value = d.zalo || '';
   $('#f-fb').value = d.fb || ''; $('#f-email').value = d.email || ''; $('#f-addr').value = d.address || '';
   $('#f-price').value = d.price || ''; $('#f-bio').value = d.bio || ''; $('#f-visible').checked = d.visible !== false;
-  updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord();
+  fillPay(); updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord(); calSel.me = null; calM.me = monthOf(todayStr()); renderMeCal();
 }
 function collectForm() {
   Object.assign(myData, {
@@ -899,6 +1128,7 @@ function collectForm() {
     fb: $('#f-fb').value.trim(), email: $('#f-email').value.trim(), address: $('#f-addr').value.trim(),
     price: $('#f-price').value.trim(), bio: $('#f-bio').value.trim(), visible: $('#f-visible').checked
   });
+  collectPay();
   if (myData.fb && !/^https?:\/\//i.test(myData.fb)) myData.fb = 'https://' + myData.fb.replace(/^\/+/, '');
 }
 function updateAvPrev() { setAv($('#f-av-prev'), { avatar: myData.avatar, name: $('#f-name').value || myData.name }); }
@@ -915,6 +1145,13 @@ function updateCoord() {
 function cleanData() {
   const d = JSON.parse(JSON.stringify(myData));
   if (!isNum(d.lat) || !isNum(d.lng)) { d.lat = null; d.lng = null; }
+  const keep = ymd(new Date(Date.now() - 864e5)), nb = {};
+  Object.entries(d.busy || {}).forEach(([k, v]) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || k < keep) return;
+    const a = (Array.isArray(v) ? v : []).filter(x => x === 's' || x === 'c');
+    if (a.length) nb[k] = [...new Set(a)];
+  });
+  d.busy = nb;
   d.albums = (d.albums || []).map(a => ({ id: a.id, title: a.title || '', desc: a.desc || '', cover: a.cover || '', photos: (a.photos || []).map(p => ({ u: p.u, t: p.t || p.u })) }));
   return d;
 }
@@ -923,6 +1160,7 @@ async function saveProfile() {
   collectForm();
   if (!myData.name) return toast('⚠ Nhập tên hiển thị', '#dc2626');
   if (!digits(myData.phone) && !digits(myData.zalo) && !safeUrl(myData.fb)) return toast('⚠ Nhập ít nhất một thông tin liên hệ', '#dc2626');
+  if ((myData.pay.deposit || 0) > 0 && !myData.pay.accNo) return toast('⚠ Nhập số tài khoản nhận cọc', '#dc2626');
   const b = $('#btn-save'); b.disabled = true;
   try {
     await persist(); toast('✔ Đã lưu hồ sơ', '#059669');
@@ -1109,6 +1347,148 @@ async function uploadImage(file, max = 2048) {
   throw new Error('Chưa cấu hình IMGBB_KEY — hãy dán link ảnh');
 }
 
+/* ══════════ ĐẶT LỊCH & ĐẶT CỌC ══════════ */
+const BANKS = [['Vietcombank','970436'],['VietinBank','970415'],['BIDV','970418'],['Agribank','970405'],['Techcombank','970407'],['MB Bank','970422'],['ACB','970416'],['VPBank','970432'],['TPBank','970423'],['Sacombank','970403'],['VIB','970441'],['SHB','970443'],['OCB','970448'],['MSB','970426'],['HDBank','970437']];
+const money = n => (+n || 0).toLocaleString('vi-VN') + 'đ';
+const slotTxt = s => s === 'a' ? 'Cả ngày' : s === 's' ? 'Buổi sáng' : 'Buổi chiều';
+const slotsOf = s => s === 'a' ? ['s', 'c'] : [s];
+function fillPay() {
+  const p = myData.pay || {};
+  $('#f-bank').innerHTML = '<option value="">— Chọn ngân hàng —</option>' + BANKS.map(b => `<option value="${b[1]}">${b[0]}</option>`).join('') + '<option value="other">Ngân hàng / ví khác</option>';
+  $('#f-bank').value = p.bin || ''; $('#f-accno').value = p.accNo || ''; $('#f-accname').value = p.accName || '';
+  $('#f-deposit').value = p.deposit || ''; $('#f-paynote').value = p.note || '';
+}
+function collectPay() {
+  const s = $('#f-bank');
+  myData.pay = { bin: s.value, bank: s.value ? s.selectedOptions[0].text : '', accNo: $('#f-accno').value.replace(/\D/g, ''),
+    accName: $('#f-accname').value.trim().toUpperCase(), deposit: parseInt($('#f-deposit').value.replace(/\D/g, '')) || 0, note: $('#f-paynote').value.trim() };
+}
+function setSeg(k) {
+  $('#seg-bk').style.display = k === 'bk' ? 'block' : 'none'; $('#seg-pf').style.display = k === 'pf' ? 'block' : 'none';
+  $('#sg-bk').classList.toggle('on', k === 'bk'); $('#sg-pf').classList.toggle('on', k === 'pf');
+  if (k === 'bk') loadBks();
+}
+function goBook() {
+  const el = $('#pro-cal'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!calSel.pro) toast('Chọn ngày còn trống rồi bấm Đặt lịch chụp', '#1e40af');
+}
+function startBooking() {
+  const p = curPro, d = calSel.pro;
+  if (!p || !d || !bkSlot) return toast('Chọn ngày và buổi chụp trước', '#d97706');
+  if (me && me.uid === p.id) return toast('Đây là lịch của chính bạn', '#d97706');
+  const b = busyOf(p, d);
+  if (bkSlot === 'a' ? b.length : b.includes(bkSlot)) return toast('Buổi này đã kín', '#dc2626');
+  if (!me) {
+    try { sessionStorage.setItem('BK_PENDING', JSON.stringify({ id: p.id, date: d, slot: bkSlot })); } catch {}
+    toast('Đăng nhập Google để đặt lịch', '#1e40af'); return doLogin('book');
+  }
+  openBkForm();
+}
+function tryResume() {
+  let pend = null; try { pend = JSON.parse(sessionStorage.getItem('BK_PENDING')); } catch {}
+  if (!pend || !me || !pros.length) return;
+  const p = pros.find(x => x.id === pend.id); if (!p) return;
+  try { sessionStorage.removeItem('BK_PENDING'); } catch {}
+  setMapMode(false); switchTab('exp'); openPro(p.id, false);
+  calSel.pro = pend.date; calM.pro = monthOf(pend.date); bkSlot = pend.slot; renderProCal();
+  if (me.uid !== p.id) openBkForm();
+}
+function openBkM(h) { $('#bk-sheet').innerHTML = h; $('#bk-sheet').scrollTop = 0; $('#bk-modal').classList.add('on'); }
+function closeBk() { $('#bk-modal').classList.remove('on'); }
+function openBkForm() {
+  const p = curPro, dep = (p.pay && p.pay.deposit) || 0;
+  openBkM(`<div class="bk-hd"><b>Đặt lịch chụp</b><button onclick="closeBk()"><i class="fa fa-xmark"></i></button></div>
+    <div class="bk-sum"><div class="av">${avHtml(p)}</div><div><b>${esc(p.name)}</b><div>${dayLabel(calSel.pro)} · ${slotTxt(bkSlot)}</div></div></div>
+    <div class="fg"><label>Họ tên</label><input id="bk-name" value="${esc(me.name)}"></div>
+    <div class="fg"><label>Số điện thoại</label><input id="bk-phone" type="tel" placeholder="09xx xxx xxx"></div>
+    ${(p.services || []).length ? `<div class="fg"><label>Dịch vụ</label><select id="bk-svc"><option value="">— Chọn —</option>${p.services.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>` : ''}
+    <div class="fg"><label>Địa điểm / ghi chú</label><textarea id="bk-note" rows="3" placeholder="Địa điểm chụp, số người, yêu cầu..."></textarea></div>
+    ${dep ? `<div class="bk-dep"><i class="fa fa-wallet"></i> Tiền cọc giữ lịch: <b>${money(dep)}</b>. Thông tin chuyển cọc hiện ngay sau khi gửi yêu cầu.</div>` : ''}
+    <button class="btnp" id="bk-send" onclick="sendBk()"><i class="fa fa-paper-plane"></i>Gửi yêu cầu đặt lịch</button>`);
+}
+async function sendBk() {
+  const p = curPro, name = $('#bk-name').value.trim(), phone = $('#bk-phone').value.trim();
+  if (!name) return toast('⚠ Nhập họ tên', '#dc2626');
+  if (digits(phone).length < 9) return toast('⚠ Nhập số điện thoại hợp lệ', '#dc2626');
+  const sv = $('#bk-svc');
+  const b = { proId: p.id, proName: p.name, custUid: me.uid, custName: name, custEmail: me.email || '', custPhone: phone, date: calSel.pro, slot: bkSlot,
+    service: sv ? sv.value : '', note: $('#bk-note').value.trim(), deposit: (p.pay && p.pay.deposit) || 0, status: 'pending', createdAt: Date.now() };
+  const btn = $('#bk-send'); btn.disabled = true;
+  try { b.id = await Store.addBk(b); myBks.unshift(b); bkSlot = null; renderProCal(); payStep(b); toast('✔ Đã gửi yêu cầu đặt lịch', '#059669'); loadBks(); }
+  catch (e) { toast('Lỗi đặt lịch: ' + (e.code || e.message), '#dc2626'); btn.disabled = false; }
+}
+function copyTx(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('✔ Đã sao chép', '#059669')).catch(() => prompt('Sao chép:', t)); }
+function payStep(b) {
+  const p = pros.find(x => x.id === b.proId) || {}, pay = p.pay || {}, has = b.deposit > 0 && pay.accNo;
+  const content = `COC ${dayShort(b.date)} ${digits(b.custPhone)}`;
+  const qr = has && pay.bin && pay.bin !== 'other' ? `https://img.vietqr.io/image/${pay.bin}-${pay.accNo}-compact2.png?amount=${b.deposit}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(pay.accName || '')}` : '';
+  const row = (k, v, cp) => `<div class="pay-row"><span>${k}</span><b>${esc(v)}</b>${cp ? `<button onclick="copyTx('${esc(cp)}')">Chép</button>` : ''}</div>`;
+  openBkM(`<div class="bk-hd"><b>Đặt cọc giữ lịch</b><button onclick="closeBk()"><i class="fa fa-xmark"></i></button></div>
+    <div class="bk-ok"><i class="fa fa-circle-check"></i>Đã gửi yêu cầu ${dayShort(b.date)} · ${slotTxt(b.slot)}</div>
+    ${has ? `${row('Ngân hàng', pay.bank || 'Khác')}${row('Số tài khoản', pay.accNo, pay.accNo)}${row('Chủ tài khoản', pay.accName || '—')}${row('Số tiền cọc', money(b.deposit), String(b.deposit))}${row('Nội dung', content, content)}
+      ${pay.note ? `<div class="bk-m" style="margin-top:8px">${esc(pay.note)}</div>` : ''}
+      ${qr ? `<img class="pay-qr" src="${esc(qr)}" alt="QR chuyển khoản" onerror="this.remove()">` : ''}
+      <button class="btnp" onclick="markPaid('${esc(b.id)}')"><i class="fa fa-check"></i>Tôi đã chuyển cọc</button>
+      <button class="btnl" onclick="closeBk()">Để sau</button>`
+    : `<div class="bk-m" style="text-align:center;margin:10px 0">Thợ sẽ liên hệ qua số điện thoại của bạn để xác nhận lịch.</div><button class="btnp" onclick="closeBk()">Xong</button>`}`);
+}
+function showPay(id) { const b = myBks.find(x => x.id === id); if (b) payStep(b); }
+async function markPaid(id) {
+  try { await Store.updBk(id, { status: 'paid' }); toast('✔ Đã báo cọc cho thợ', '#059669'); closeBk(); loadBks(); }
+  catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+async function cusCancel(id) {
+  if (!confirm('Hủy yêu cầu đặt lịch này?')) return;
+  try { await Store.updBk(id, { status: 'cancelled' }); toast('Đã hủy lịch', '#059669'); loadBks(); }
+  catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+async function proAct(id, st) {
+  const b = proBks.find(x => x.id === id); if (!b) return;
+  if (!myData || !myData.name) return toast('⚠ Hãy lưu hồ sơ thợ ảnh trước', '#d97706');
+  if (st === 'cancelled' && !confirm('Từ chối / hủy lịch này?')) return;
+  try {
+    await Store.updBk(id, { status: st });
+    const was = b.status === 'confirmed';
+    if (st === 'confirmed' || was) {
+      collectForm();
+      const busy = myData.busy || (myData.busy = {}), set = new Set(busy[b.date] || []);
+      slotsOf(b.slot).forEach(k => st === 'confirmed' ? set.add(k) : set.delete(k));
+      if (set.size) busy[b.date] = [...set]; else delete busy[b.date];
+      await persist(); renderMeCal();
+    }
+    toast(st === 'confirmed' ? '✔ Đã xác nhận — ngày đã chuyển sang kín' : 'Đã cập nhật', '#059669'); loadBks();
+  } catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+let myBks = [], proBks = [];
+const BK_ST = { pending: ['Chờ xác nhận', '#b45309', '#fef3c7'], paid: ['Đã báo cọc', '#1d4ed8', '#dbeafe'], confirmed: ['Đã xác nhận', '#15803d', '#dcfce7'], cancelled: ['Đã hủy', '#64748b', '#f1f5f9'] };
+async function loadBks() {
+  if (!me) return;
+  try {
+    const [a, b] = await Promise.all([Store.myBks(me.uid), Store.proBks(me.uid)]);
+    const f = (x, y) => (y.createdAt || 0) - (x.createdAt || 0);
+    myBks = a.sort(f); proBks = b.sort(f); renderBks();
+  } catch (e) { toast('Lỗi tải lịch đặt: ' + (e.code || e.message), '#dc2626'); }
+}
+function bkCard(b, role) {
+  const st = BK_ST[b.status] || BK_ST.pending, live = b.status === 'pending' || b.status === 'paid';
+  let acts = '';
+  if (role === 'cus') {
+    if (b.status === 'pending' && b.deposit > 0) acts += `<button class="bkb main" onclick="showPay('${esc(b.id)}')">Chuyển cọc</button>`;
+    if (live) acts += `<button class="bkb" onclick="cusCancel('${esc(b.id)}')">Hủy lịch</button>`;
+  } else if (live) acts = `<button class="bkb main" onclick="proAct('${esc(b.id)}','confirmed')">Xác nhận</button><button class="bkb" onclick="proAct('${esc(b.id)}','cancelled')">Từ chối</button>`;
+  else if (b.status === 'confirmed') acts = `<button class="bkb" onclick="proAct('${esc(b.id)}','cancelled')">Hủy lịch</button>`;
+  return `<div class="bk-c"><div class="bk-r"><b>${dayLabel(b.date)}</b><span class="bk-st" style="color:${st[1]};background:${st[2]}">${st[0]}</span></div>
+    <div class="bk-m">${slotTxt(b.slot)} · ${esc(role === 'pro' ? b.custName : b.proName)}${role === 'pro' ? ` · <a href="tel:${esc(digits(b.custPhone))}">${esc(b.custPhone)}</a>` : ''}</div>
+    ${b.service ? `<div class="bk-m">Dịch vụ: ${esc(b.service)}</div>` : ''}${b.note ? `<div class="bk-m">${esc(b.note)}</div>` : ''}
+    ${b.deposit ? `<div class="bk-m">Cọc: ${money(b.deposit)}</div>` : ''}${acts ? `<div class="bk-a">${acts}</div>` : ''}</div>`;
+}
+function renderBks() {
+  const em = t => `<div class="empty" style="padding:18px"><i class="fa fa-calendar"></i>${t}</div>`;
+  $('#bk-mine').innerHTML = myBks.length ? myBks.map(b => bkCard(b, 'cus')).join('') : em('Bạn chưa đặt lịch nào');
+  $('#bk-prosec').style.display = myData && myData.name ? 'block' : 'none';
+  $('#bk-pro').innerHTML = proBks.length ? proBks.map(b => bkCard(b, 'pro')).join('') : em('Chưa có khách đặt lịch');
+}
+
 /* ══════════ KHỞI ĐỘNG ══════════ */
 function onData(list) {
   pros = list;
@@ -1125,9 +1505,11 @@ function onData(list) {
     if (m && pros.find(p => p.id === decodeURIComponent(m[1]))) openPro(decodeURIComponent(m[1]));
     else goHome();
   }
+  tryResume();
 }
 if (DEMO) console.warn('Chưa cấu hình Firebase — dữ liệu chỉ lưu trên trình duyệt này.');
 renderChips();
+$('#q-date').min = todayStr();
 Store.listen(onData);
 Store.onAuth(onAuthChanged);
 setTimeout(() => $('#loading').style.display = 'none', 6000);
