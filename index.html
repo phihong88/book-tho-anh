@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book thợ chụp ảnh</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#1a4a7a;--pd:#0f2d4e;--acc:#e11d48;
+  --red:#dc2626;--blue:#0ea5e9;--gold:#d97706;
+  --sur:#fff;--bg:#f1f5f9;--tx:#0f172a;--tx2:#64748b;--bdr:#e2e8f0;
+  --ok:#059669;--r:12px;--sh:0 2px 16px rgba(0,0,0,.09);--shl:0 8px 32px rgba(0,0,0,.16)
+}
+html,body{height:100%}
+body{font-family:'Segoe UI',system-ui,sans-serif;display:flex;height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:var(--tx)}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);z-index:99999;background:var(--tx);color:#fff;padding:11px 26px;border-radius:40px;font-size:14px;font-weight:600;pointer-events:none;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;max-width:92vw;text-align:center;box-shadow:var(--shl)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+#loading{position:fixed;inset:0;background:var(--p);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px}
+#loading h2{font-size:20px;font-weight:700}
+.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* MAP */
+#map-wrap{flex:1;position:relative;min-width:0}
+#map{width:100%;height:100%}
+#map.picking{cursor:crosshair}
+#map.picking .leaflet-interactive{cursor:crosshair}
+#pick-bar{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:950;background:var(--acc);color:#fff;padding:10px 16px 10px 20px;border-radius:40px;font-size:13px;font-weight:700;box-shadow:var(--shl);display:none;align-items:center;gap:12px;white-space:nowrap}
+#pick-bar.on{display:flex}
+#pick-bar button{background:rgba(255,255,255,.22);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer}
+
+#mtools{position:absolute;right:14px;bottom:30px;z-index:900;display:flex;flex-direction:column;gap:7px}
+.mtb{width:42px;height:42px;border-radius:11px;border:none;background:var(--sur);box-shadow:var(--sh);cursor:pointer;font-size:16px;color:var(--p);display:flex;align-items:center;justify-content:center;transition:background .15s,transform .12s}
+.mtb:hover{background:var(--bg);transform:scale(1.07)}
+.mtb.on{background:var(--p);color:#fff}
+
+.pinw{position:relative;width:46px;height:56px}
+.pinw::after{content:'';position:absolute;left:50%;bottom:0;transform:translateX(-50%);border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid #fff;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.ph-pin{position:absolute;top:0;left:0;width:46px;height:46px;border-radius:50%;background:var(--p);border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;transition:transform .2s}
+.ph-pin img{width:100%;height:100%;object-fit:cover}
+.pinw.on .ph-pin{transform:scale(1.22);border-color:var(--acc)}
+.pinw.on::after{border-top-color:var(--acc)}
+.pinw.me .ph-pin{border-color:var(--acc)}
+.me-dot{width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25)}
+.leaflet-tooltip{background:rgba(15,23,42,.88)!important;border:none!important;border-radius:8px!important;color:#fff!important;font-size:12px!important;font-weight:600!important;padding:4px 10px!important}
+.leaflet-tooltip::before{display:none}
+
+/* LIGHTBOX */
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:9990;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#lb.on{display:flex}
+#lb-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:92vw;max-height:78vh}
+#lb-img{max-width:86vw;max-height:78vh;border-radius:10px;object-fit:contain;display:block}
+#lb-x{position:fixed;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);border-radius:50%;z-index:3}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:50%;width:48px;height:48px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:2}
+#lb-prv{left:0}#lb-nxt{right:0}
+#lb-cnt{color:rgba(255,255,255,.65);font-size:13px;margin-top:10px}
+#lb-thumbs{display:flex;gap:7px;margin-top:10px;max-width:92vw;overflow-x:auto;padding:4px}
+.lb-th{width:58px;height:42px;border-radius:7px;cursor:pointer;border:2px solid transparent;opacity:.55;flex-shrink:0;overflow:hidden}
+.lb-th img{width:100%;height:100%;object-fit:cover;display:block}
+.lb-th.on{border-color:#fff;opacity:1}
+
+/* SIDE */
+#side{width:460px;flex-shrink:0;display:flex;flex-direction:column;background:var(--sur);box-shadow:-4px 0 24px rgba(0,0,0,.07);z-index:10;min-height:0}
+#ttabs{display:flex;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.ttab{flex:1;height:52px;border:none;background:none;cursor:pointer;font-size:21px;color:var(--tx2);border-bottom:3px solid transparent;display:flex;align-items:center;justify-content:center;gap:8px;transition:color .2s,border-color .2s,background .2s}
+.ttab:hover{background:var(--bg);color:var(--p)}
+.ttab.on{color:var(--p);border-bottom-color:var(--p)}
+.ttab img{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--bdr)}
+.ttab.on img{border-color:var(--p)}
+.panel{flex:1;overflow-y:auto;display:none;min-height:0}
+.panel.on{display:block}
+.view{display:none;animation:fadeUp .3s ease}
+.view.on{display:block}
+
+/* EXPLORE LIST */
+.ex-hd{padding:16px 16px 10px;position:sticky;top:0;background:var(--sur);z-index:5;border-bottom:1px solid var(--bdr)}
+.ex-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ex-title h2{font-size:18px;font-weight:800;color:var(--p);display:flex;align-items:center;gap:8px}
+.sbox{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:40px;padding:0 14px;height:42px}
+.sbox i{color:var(--tx2)}
+.sbox input{flex:1;border:none;background:none;outline:none;font-size:14px;color:var(--tx)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1.5px solid var(--bdr);background:var(--sur);font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip:hover{border-color:var(--p);color:var(--p)}
+.chip.on{background:var(--p);border-color:var(--p);color:#fff}
+.ex-meta{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;font-size:12px;color:var(--tx2)}
+.sortbtn{border:none;background:none;color:var(--p);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+#pro-list{padding:10px 16px 20px;display:flex;flex-direction:column;gap:9px}
+.pcard{display:flex;gap:12px;padding:12px;border-radius:14px;border:1.5px solid var(--bdr);cursor:pointer;background:var(--sur);transition:border-color .2s,transform .12s,box-shadow .2s}
+.pcard:hover{border-color:var(--p);transform:translateX(3px);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.pcard.on{border-color:var(--acc)}
+.av{border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.pcard .av{width:54px;height:54px;font-size:18px}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-addr{font-size:12px;color:var(--tx2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;background:#eff6ff;color:var(--p)}
+.pc-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0}
+.pc-km{font-size:11px;font-weight:700;color:var(--acc)}
+.pc-cnt{font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px}
+.pc-strip{display:flex;gap:4px;margin-top:8px}
+.pc-strip img{width:56px;height:42px;border-radius:7px;object-fit:cover;background:var(--bg)}
+.empty{text-align:center;padding:50px 20px;color:var(--tx2);font-size:13px}
+.empty i{font-size:40px;color:var(--bdr);display:block;margin-bottom:12px}
+
+/* DETAIL */
+.backbar{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--sur);z-index:5}
+.backbtn{width:34px;height:34px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;color:var(--tx);font-size:14px;flex-shrink:0}
+.backbtn:hover{background:var(--bdr)}
+.backbar .bt{font-size:14px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:34px;height:34px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;color:var(--p);font-size:14px;flex-shrink:0}
+.d-cover{height:170px;background:linear-gradient(135deg,var(--p),#3b82f6);position:relative;overflow:hidden}
+.d-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.d-head{padding:0 18px;margin-top:-42px;position:relative;display:flex;align-items:flex-end;gap:12px}
+.d-head .av{width:88px;height:88px;font-size:28px;border:4px solid #fff;box-shadow:var(--sh)}
+.d-name{padding:10px 18px 0}
+.d-name h2{font-size:21px;font-weight:800;line-height:1.25}
+.d-addr{font-size:13px;color:var(--tx2);margin-top:4px;display:flex;gap:6px;align-items:flex-start}
+.d-addr i{margin-top:3px;color:var(--acc)}
+.d-acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px}
+.dact{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border-radius:12px;border:1.5px solid var(--bdr);background:var(--sur);cursor:pointer;font-size:11.5px;font-weight:700;color:var(--tx);text-decoration:none;transition:all .15s}
+.dact i{font-size:18px}
+.dact:hover{border-color:var(--p);background:#f0f7ff}
+.dact.call i{color:var(--ok)}.dact.zalo i{color:#0068ff}.dact.fb i{color:#1877f2}.dact.dir i{color:var(--acc)}
+.dact.off{opacity:.35;pointer-events:none}
+.d-sec{padding:4px 18px 14px}
+.d-bio{font-size:14px;line-height:1.75;white-space:pre-line}
+.d-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.d-price{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:700;color:var(--ok);background:#ecfdf5;padding:5px 12px;border-radius:20px}
+.sec-t{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--tx2);text-transform:uppercase;margin:6px 0 10px;display:flex;align-items:center;gap:6px}
+.alb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.alb{border-radius:12px;overflow:hidden;cursor:pointer;border:1.5px solid var(--bdr);background:var(--sur);transition:transform .15s,box-shadow .2s}
+.alb:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.alb-cv{aspect-ratio:4/3;background:var(--bg);position:relative;overflow:hidden}
+.alb-cv img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.alb:hover .alb-cv img{transform:scale(1.05)}
+.alb-n{position:absolute;right:7px;bottom:7px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.alb-t{padding:8px 10px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:12px 14px 20px}
+.ph{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg);position:relative}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.ph:hover img{transform:scale(1.06)}
+.al-desc{padding:12px 16px 0;font-size:13px;color:var(--tx2);line-height:1.6}
+
+/* ME */
+.login-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:60px 30px}
+.login-card .ico{font-size:58px;color:var(--bdr);margin-bottom:18px}
+.login-card h3{font-size:18px;font-weight:800;margin-bottom:22px}
+.gbtn{display:flex;align-items:center;gap:12px;padding:12px 26px;border-radius:40px;border:1.5px solid var(--bdr);background:#fff;cursor:pointer;font-size:15px;font-weight:700;color:var(--tx);box-shadow:var(--sh);transition:box-shadow .2s,transform .12s}
+.gbtn:hover{box-shadow:var(--shl);transform:translateY(-1px)}
+.gbtn svg{width:20px;height:20px}
+.me-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bdr)}
+.me-hd .av{width:42px;height:42px;font-size:15px}
+.me-hd .mi{flex:1;min-width:0}
+.me-hd .mn{font-size:14px;font-weight:700}
+.me-hd .me{font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frm{padding:14px 16px 24px}
+.fg{margin-bottom:11px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg textarea,.fg select{width:100%;padding:9px 12px;border:1.5px solid var(--bdr);border-radius:9px;font-size:14px;color:var(--tx);background:var(--sur);outline:none;transition:border-color .2s}
+.fg input:focus,.fg textarea:focus{border-color:var(--p)}
+.rw2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.av-edit{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.av-edit .av{width:74px;height:74px;font-size:24px;cursor:pointer;position:relative}
+.av-edit .av::after{content:'\f030';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;inset:0;background:rgba(0,0,0,.4);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:0;transition:opacity .2s}
+.av-edit .av:hover::after{opacity:1}
+.av-edit .fg{flex:1;margin:0}
+.sdiv{margin:16px 0 11px;padding:7px 10px;background:#f8fafc;border-radius:7px;font-size:10.5px;font-weight:800;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.sdiv .sp{flex:1}
+.loc-box{background:#fff1f2;border:1.5px solid #fecdd3;border-radius:11px;padding:11px}
+.addr-row{display:flex;gap:6px}
+.addr-row input{flex:1}
+.sqbtn{width:40px;flex-shrink:0;border:none;border-radius:9px;background:var(--p);color:#fff;cursor:pointer;font-size:14px}
+#geo-drop{background:var(--sur);border:1px solid var(--bdr);border-radius:9px;margin-top:5px;max-height:180px;overflow-y:auto;display:none}
+.geo-it{padding:9px 11px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--bdr)}
+.geo-it:hover{background:var(--bg)}
+.geo-it:last-child{border:none}
+.loc-acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.lbtn{padding:9px 6px;border-radius:9px;border:1.5px solid #fda4af;background:#fff;color:var(--acc);font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.lbtn:hover{background:#ffe4e6}
+#coord-lbl{font-size:12px;color:var(--tx2);margin-top:8px;display:flex;align-items:center;gap:6px}
+#coord-lbl.ok{color:var(--ok);font-weight:700}
+.svc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:13.5px;font-weight:600;margin-top:4px}
+.sw{position:relative;width:44px;height:24px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#cbd5e1;border-radius:24px;cursor:pointer;transition:.2s}
+.sw span::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--ok)}
+.sw input:checked+span::before{transform:translateX(20px)}
+.btnp{width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:11px;cursor:pointer;font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;transition:background .2s}
+.btnp:hover{background:var(--pd)}
+.btnp:disabled{opacity:.6;cursor:wait}
+.btng{width:100%;padding:10px;background:none;color:var(--red);border:1.5px dashed #fca5a5;border-radius:11px;cursor:pointer;font-size:13px;font-weight:600;margin-top:8px}
+.btng:hover{background:#fef2f2}
+.btnl{width:100%;padding:10px;background:var(--bg);color:var(--tx);border:none;border-radius:11px;cursor:pointer;font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px}
+.addbtn{padding:5px 12px;background:var(--p);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:0;text-transform:none}
+.my-alb{display:flex;align-items:center;gap:10px;padding:8px;border:1.5px solid var(--bdr);border-radius:11px;margin-bottom:7px;cursor:pointer;transition:border-color .15s}
+.my-alb:hover{border-color:var(--p)}
+.my-alb .cv{width:64px;height:48px;border-radius:8px;overflow:hidden;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--bdr)}
+.my-alb .cv img{width:100%;height:100%;object-fit:cover}
+.my-alb .t{flex:1;min-width:0;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.my-alb .n{font-size:11.5px;color:var(--tx2);font-weight:400;margin-top:2px}
+.ed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ed-ph{aspect-ratio:1;border-radius:9px;overflow:hidden;position:relative;background:var(--bg);border:2px solid transparent}
+.ed-ph.cover{border-color:var(--gold)}
+.ed-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ed-ph .b{position:absolute;top:4px;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.ed-ph .del{right:4px;background:rgba(220,38,38,.9);color:#fff}
+.ed-ph .star{left:4px;background:rgba(0,0,0,.45);color:#fff}
+.ed-ph.cover .star{background:var(--gold)}
+.up-tile{aspect-ratio:1;border-radius:9px;border:2px dashed #93c5fd;background:#eff6ff;color:var(--p);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:12px;font-weight:700}
+.up-tile i{font-size:20px}
+.up-tile:hover{background:#dbeafe}
+#up-prog{font-size:12px;color:var(--p);font-weight:700;margin-top:8px;display:none;align-items:center;gap:7px}
+.link-row{display:flex;gap:6px;margin-top:10px}
+.link-row input{flex:1;padding:9px 12px;border:1.5px solid var(--bdr);border-radius:9px;font-size:13px;outline:none}
+
+/* INFO */
+.info{padding:50px 30px;text-align:center}
+.info h2{font-size:20px;font-weight:800;color:var(--p);margin-bottom:16px}
+.info p{font-size:14px;color:var(--tx);margin-bottom:6px}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
+
+/* MOBILE PREVIEW CARD (bản đồ) */
+#mprev{display:none;position:absolute;left:10px;right:10px;bottom:12px;z-index:950;background:#fff;border-radius:16px;box-shadow:var(--shl);padding:12px;animation:fadeUp .25s ease}
+#mprev.on{display:block}
+#map-wrap.prev #mtools{display:none}
+.mp-x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--tx2);cursor:pointer}
+.mp-top{display:flex;gap:12px;align-items:center;padding-right:28px;cursor:pointer}
+.mp-top .av{width:56px;height:56px;font-size:18px}
+.mp-acts{display:flex;gap:7px;margin-top:11px}
+.mp-b{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 6px;border-radius:11px;border:1.5px solid var(--bdr);background:#fff;font-size:13.5px;font-weight:700;color:var(--tx);text-decoration:none;cursor:pointer}
+.mp-b.main{flex:1.6;background:var(--p);border-color:var(--p);color:#fff}
+.maplink{display:inline-flex;align-items:center;gap:4px;color:var(--p);font-weight:700;cursor:pointer;white-space:nowrap;margin-left:4px}
+.d-sticky{display:none}
+.tag i,.chip i{font-size:.9em;opacity:.85}
+
+/* BOTTOM NAV (mobile) */
+#bnav{display:none;position:fixed;left:0;right:0;bottom:0;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid var(--bdr);z-index:1000;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.bn{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:19px;color:var(--tx2);cursor:pointer}
+.bn span{font-size:10.5px;font-weight:700}
+.bn.on{color:var(--p)}
+.bn img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid var(--bdr)}
+.bn.on img{border-color:var(--p)}
+
+@media(max-width:820px){
+  body{flex-direction:column}
+  #map-wrap{display:none;position:fixed;left:0;right:0;top:0;bottom:calc(60px + env(safe-area-inset-bottom));z-index:20}
+  body.m-map #map-wrap{display:block}
+  #side{width:100%;flex:1;box-shadow:none;margin-bottom:calc(60px + env(safe-area-inset-bottom))}
+  #ttabs{display:none}
+  #bnav{display:flex}
+  #mtools{bottom:16px;right:10px;gap:6px}
+  .mtb{width:40px;height:40px;font-size:15px}
+  .ex-hd{padding:12px 12px 8px}
+  .ex-title{margin-bottom:8px}
+  .ex-meta{padding:8px 12px 0}
+  #pro-list{padding:8px 12px 16px;gap:8px}
+  .pcard{padding:11px}
+  .pc-strip img{width:50px;height:38px}
+  .d-cover{height:150px}
+  .d-head .av{width:80px;height:80px}
+  .d-acts{gap:6px;padding:12px 14px}
+  .d-sec{padding:4px 14px 14px}
+  .d-name{padding:10px 14px 0}
+  .d-head{padding:0 14px}
+  .alb-grid{gap:8px}
+  .ph-grid{padding:10px 10px 16px;gap:4px}
+  .d-sticky{display:flex;position:sticky;bottom:0;gap:8px;padding:10px 14px;background:rgba(255,255,255,.97);border-top:1px solid var(--bdr);z-index:4}
+  .sbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;font-size:15px;font-weight:800;color:#fff;text-decoration:none}
+  .sbtn.call{background:var(--ok)}
+  .sbtn.zalo{background:#0068ff}
+  .fg input,.fg textarea,.sbox input,.link-row input{font-size:16px}
+  .frm{padding:12px 14px 24px}
+  #lb{padding:10px}
+  #lb-img{max-width:100vw;max-height:74vh}
+  .lb-nav{display:none!important}
+  #pick-bar{font-size:12px;top:10px}
+  #toast{top:12px;font-size:13px;padding:10px 20px}
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><h2>Book thợ chụp ảnh</h2></div>
+<div id="toast"></div>
+
+<!-- LIGHTBOX -->
+<div id="lb">
+  <span id="lb-x" onclick="lbClose()">×</span>
+  <div id="lb-wrap">
+    <button class="lb-nav" id="lb-prv" onclick="lbNav(-1)"><i class="fa fa-chevron-left"></i></button>
+    <img id="lb-img" alt="">
+    <button class="lb-nav" id="lb-nxt" onclick="lbNav(1)"><i class="fa fa-chevron-right"></i></button>
+  </div>
+  <div id="lb-cnt"></div>
+  <div id="lb-thumbs"></div>
+</div>
+
+<!-- MAP -->
+<div id="map-wrap">
+  <div id="map"></div>
+  <div id="pick-bar"><i class="fa fa-location-crosshairs"></i>Nhấn vào bản đồ để ghim vị trí<button onclick="stopPick()" title="Hủy"><i class="fa fa-xmark"></i></button></div>
+  <div id="mprev"></div>
+  <div id="mtools">
+    <button class="mtb" id="btn-layer" onclick="toggleLayer()" title="Đổi lớp bản đồ"><i class="fa fa-satellite"></i></button>
+    <button class="mtb" id="btn-near" onclick="locateMe()" title="Gần tôi"><i class="fa fa-location-arrow"></i></button>
+    <button class="mtb" onclick="goHome()" title="Xem tất cả"><i class="fa fa-house"></i></button>
+    <button class="mtb" onclick="map.zoomIn()"><i class="fa fa-plus"></i></button>
+    <button class="mtb" onclick="map.zoomOut()"><i class="fa fa-minus"></i></button>
+  </div>
+</div>
+
+<!-- SIDE -->
+<div id="side">
+  <div id="ttabs">
+    <button class="ttab on" id="tt-exp" onclick="switchTab('exp')" title="Tìm thợ"><i class="fa fa-camera-retro"></i></button>
+    <button class="ttab" id="tt-me" onclick="switchTab('me')" title="Hồ sơ của tôi"><i class="fa fa-user-pen"></i></button>
+    <button class="ttab" id="tt-info" onclick="switchTab('info')" title="Thông tin"><i class="fa fa-circle-info"></i></button>
+  </div>
+
+  <!-- ═════ EXPLORE ═════ -->
+  <div class="panel on" id="p-exp">
+    <div class="view on" id="v-list">
+      <div class="ex-hd">
+        <div class="ex-title"><h2><i class="fa fa-camera-retro"></i>Book thợ chụp ảnh</h2></div>
+        <div class="sbox"><i class="fa fa-magnifying-glass"></i><input id="q" type="text" placeholder="Tìm tên thợ, khu vực, dịch vụ..." oninput="renderList()"></div>
+        <div class="chips" id="flt-chips"></div>
+      </div>
+      <div class="ex-meta"><span id="pro-count"></span><button class="sortbtn" id="sort-btn" onclick="locateMe()"><i class="fa fa-location-arrow"></i>Gần tôi</button></div>
+      <div id="pro-list"></div>
+    </div>
+
+    <div class="view" id="v-detail">
+      <div class="backbar">
+        <button class="backbtn" onclick="showList()"><i class="fa fa-arrow-left"></i></button>
+        <div class="bt" id="d-bt"></div>
+        <button class="iconbtn" onclick="copyLink()" title="Sao chép link"><i class="fa fa-link"></i></button>
+      </div>
+      <div id="d-body"></div>
+    </div>
+
+    <div class="view" id="v-album">
+      <div class="backbar">
+        <button class="backbtn" onclick="backToDetail()"><i class="fa fa-arrow-left"></i></button>
+        <div class="bt" id="a-bt"></div>
+      </div>
+      <div id="a-body"></div>
+    </div>
+  </div>
+
+  <!-- ═════ MY PROFILE ═════ -->
+  <div class="panel" id="p-me">
+    <div class="view on" id="v-login">
+      <div class="login-card">
+        <div class="ico"><i class="fa fa-camera"></i></div>
+        <h3>Đăng nhập để tạo hồ sơ thợ ảnh</h3>
+        <button class="gbtn" onclick="doLogin()">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+          Đăng nhập bằng Google
+        </button>
+      </div>
+    </div>
+
+    <div class="view" id="v-edit">
+      <div class="me-hd">
+        <div class="av" id="me-av"></div>
+        <div class="mi"><div class="mn" id="me-name"></div><div class="me" id="me-email"></div></div>
+        <button class="iconbtn" onclick="viewMyPage()" title="Xem trang"><i class="fa fa-eye"></i></button>
+        <button class="iconbtn" onclick="doLogout()" title="Đăng xuất" style="color:var(--red)"><i class="fa fa-right-from-bracket"></i></button>
+      </div>
+      <div class="frm">
+        <div class="av-edit">
+          <div class="av" id="f-av-prev" onclick="pickAvatar()" title="Đổi ảnh đại diện"></div>
+          <div class="fg"><label>Tên hiển thị / Studio</label><input id="f-name" type="text" placeholder="Vd: Hoàng Studio"></div>
+        </div>
+
+        <div class="sdiv"><i class="fa fa-address-book"></i>Liên hệ</div>
+        <div class="rw2">
+          <div class="fg"><label>Số điện thoại</label><input id="f-phone" type="tel" placeholder="09xx xxx xxx"></div>
+          <div class="fg"><label>Zalo</label><input id="f-zalo" type="tel" placeholder="Số Zalo"></div>
+        </div>
+        <div class="fg"><label>Facebook / Fanpage</label><input id="f-fb" type="url" placeholder="https://facebook.com/..."></div>
+        <div class="fg"><label>Email</label><input id="f-email" type="email"></div>
+
+        <div class="sdiv"><i class="fa fa-location-dot"></i>Địa chỉ &amp; vị trí</div>
+        <div class="loc-box">
+          <div class="fg" style="margin-bottom:0"><label>Địa chỉ</label>
+            <div class="addr-row"><input id="f-addr" type="text" placeholder="Số nhà, đường, phường/xã..." onkeydown="if(event.key==='Enter')geoSearch()"><button class="sqbtn" onclick="geoSearch()" title="Tìm trên bản đồ"><i class="fa fa-magnifying-glass-location"></i></button></div>
+            <div id="geo-drop"></div>
+          </div>
+          <div class="loc-acts">
+            <button class="lbtn" onclick="useGPS()"><i class="fa fa-crosshairs"></i>Vị trí hiện tại</button>
+            <button class="lbtn" onclick="startPick()"><i class="fa fa-map-pin"></i>Chọn trên bản đồ</button>
+          </div>
+          <div id="coord-lbl"></div>
+        </div>
+
+        <div class="sdiv"><i class="fa fa-briefcase"></i>Dịch vụ</div>
+        <div class="svc-chips" id="f-svcs"></div>
+        <div class="fg" style="margin-top:11px"><label>Giá tham khảo</label><input id="f-price" type="text" placeholder="Vd: Từ 500.000đ/buổi"></div>
+        <div class="fg"><label>Giới thiệu</label><textarea id="f-bio" rows="4" placeholder="Kinh nghiệm, phong cách chụp, thiết bị..."></textarea></div>
+        <label class="toggle">Hiển thị công khai trên bản đồ<span class="sw"><input type="checkbox" id="f-visible" checked><span></span></span></label>
+
+        <button class="btnp" id="btn-save" onclick="saveProfile()"><i class="fa fa-floppy-disk"></i>Lưu hồ sơ</button>
+
+        <div class="sdiv"><i class="fa fa-images"></i>Album ảnh mẫu<span class="sp"></span><button class="addbtn" onclick="openAlbumEditor(-1)"><i class="fa fa-plus"></i> Album</button></div>
+        <div id="my-albums"></div>
+
+        <button class="btng" onclick="deleteProfile()"><i class="fa fa-trash"></i> Xóa hồ sơ</button>
+      </div>
+    </div>
+
+    <div class="view" id="v-aledit">
+      <div class="backbar">
+        <button class="backbtn" onclick="closeAlbumEditor()"><i class="fa fa-arrow-left"></i></button>
+        <div class="bt" id="ae-bt">Album</div>
+      </div>
+      <div class="frm">
+        <div class="fg"><label>Tên album</label><input id="ae-title" type="text" placeholder="Vd: Ảnh cưới ngoại cảnh"></div>
+        <div class="fg"><label>Mô tả</label><textarea id="ae-desc" rows="2"></textarea></div>
+        <div class="sdiv"><i class="fa fa-image"></i>Ảnh<span class="sp"></span><span id="ae-cnt" style="letter-spacing:0"></span></div>
+        <div class="ed-grid" id="ae-grid"></div>
+        <div id="up-prog"><div class="spin" style="width:16px;height:16px;border-width:2px;border-color:#bfdbfe;border-top-color:var(--p)"></div><span></span></div>
+        <div class="link-row"><input id="ae-link" type="url" placeholder="Hoặc dán link ảnh..." onkeydown="if(event.key==='Enter')addPhotoLink()"><button class="sqbtn" onclick="addPhotoLink()" title="Thêm"><i class="fa fa-plus"></i></button></div>
+        <button class="btnp" id="ae-save" onclick="saveAlbum()"><i class="fa fa-floppy-disk"></i>Lưu album</button>
+        <button class="btng" id="ae-del" onclick="deleteAlbum()"><i class="fa fa-trash"></i> Xóa album</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════ INFO ═════ -->
+  <div class="panel" id="p-info">
+    <div class="info">
+      <h2>Book thợ chụp ảnh</h2>
+      <p>Tác giả: Phi Hồng</p>
+      <p>SĐT/Zalo: 0971318088</p>
+    </div>
+  </div>
+</div>
+
+<nav id="bnav">
+  <button class="bn on" id="bn-exp" onclick="bnav('exp')"><i class="fa fa-camera-retro"></i><span>Tìm thợ</span></button>
+  <button class="bn" id="bn-map" onclick="bnav('map')"><i class="fa fa-map-location-dot"></i><span>Bản đồ</span></button>
+  <button class="bn" id="bn-me" onclick="bnav('me')"><i class="fa fa-user-pen"></i><span>Hồ sơ</span></button>
+  <button class="bn" id="bn-info" onclick="bnav('info')"><i class="fa fa-circle-info"></i><span>Thông tin</span></button>
+</nav>
+
+<input type="file" id="file-av" accept="image/*" hidden onchange="onAvatarFile(this)">
+<input type="file" id="file-ph" accept="image/*" multiple hidden onchange="onPhotoFiles(this)">
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CẤU HÌNH — dán thông tin Firebase + ImgBB của bạn vào đây.
+   Để trống apiKey → app chạy CHẾ ĐỘ DEMO (lưu trên trình duyệt).
+
+   Firestore Rules (Firebase Console → Firestore → Rules):
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /photographers/{uid} {
+         allow read: if true;
+         allow write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+   ══════════════════════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCEsEF7BhiIuyYTXkpjSNKiqm_U1x5yWUg",
+  authDomain: "book-tho-anh.firebaseapp.com",
+  projectId: "book-tho-anh",
+  storageBucket: "book-tho-anh.firebasestorage.app",
+  messagingSenderId: "588789900119",
+  appId: "1:588789900119:web:b187659c3c12f749411412"
+};
+const IMGBB_KEY = "005444bd03801687dcc8c6a3465d70ac";   // https://api.imgbb.com → Get API key (miễn phí)
+
+const HOME = [21.3891, 103.0227], HOME_ZOOM = 13;
+const SVC = [
+  ['Ảnh cưới','fa-ring'],['Studio','fa-camera'],['Sinh nhật','fa-cake-candles'],['Tiệc / Liên hoan','fa-champagne-glasses'],
+  ['Kỷ yếu','fa-graduation-cap'],['Chân dung','fa-user'],['Gia đình','fa-people-roof'],['Em bé','fa-baby'],
+  ['Sự kiện','fa-star'],['Hội nghị','fa-users'],['Lễ hội / Văn hóa','fa-masks-theater'],['Du lịch','fa-mountain-sun'],
+  ['Sản phẩm','fa-box-open'],['Thời trang','fa-shirt'],['Ảnh thẻ','fa-id-card'],['Quay phim','fa-video'],['Flycam','fa-helicopter']
+];
+const SERVICES = SVC.map(x => x[0]);
+const svcIco = s => (SVC.find(x => x[0] === s) || [0, 'fa-tag'])[1];
+const tagHtml = s => `<span class="tag"><i class="fa ${svcIco(s)}"></i> ${esc(s)}</span>`;
+const MAX_PHOTOS = 60;
+const DEMO = !FIREBASE_CONFIG.apiKey;
+
+/* ══════════ HELPERS ══════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = u => (typeof u === 'string' && /^(https?:\/\/|data:image\/)/i.test(u.trim())) ? u.trim() : '';
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
+const isNum = v => typeof v === 'number' && isFinite(v);
+const digits = s => String(s || '').replace(/[^\d+]/g, '');
+const initials = n => (String(n || '?').trim().split(/\s+/).slice(-1)[0] || '?')[0].toUpperCase();
+const uid8 = () => Math.random().toString(36).slice(2, 10);
+function avHtml(p) {
+  const a = safeUrl(p && p.avatar);
+  const i = esc(initials(p && p.name));
+  return a ? `<img src="${esc(a)}" alt="" referrerpolicy="no-referrer" data-i="${i}" onerror="this.parentNode.textContent=this.dataset.i">` : i;
+}
+function setAv(el, p) { el.innerHTML = avHtml(p); if (!safeUrl(p && p.avatar)) el.textContent = initials(p && p.name); }
+function km(a, b) {
+  const R = 6371, r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r;
+  const x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+let toastT;
+function toast(msg, color = '#0f172a') {
+  const t = $('#toast'); t.textContent = msg; t.style.background = color;
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function photosOf(p) { return (p.albums || []).reduce((n, a) => n + (a.photos || []).length, 0); }
+function coverOf(al) { return al.cover && (al.photos || []).find(x => x.u === al.cover) || (al.photos || [])[0] || null; }
+
+/* ══════════ STORE (Firebase hoặc Demo) ══════════ */
+let Store;
+if (!DEMO) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth(), db = firebase.firestore(), col = db.collection('photographers');
+  Store = {
+    listen(cb) {
+      col.onSnapshot(s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))),
+        e => { toast('Lỗi tải dữ liệu: ' + e.code, '#dc2626'); cb([]); });
+    },
+    async get(uid) { const d = await col.doc(uid).get(); return d.exists ? { ...d.data(), id: d.id } : null; },
+    async save(uid, data) { await col.doc(uid).set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); },
+    async remove(uid) { await col.doc(uid).delete(); },
+    onAuth(cb) { auth.onAuthStateChanged(u => cb(u ? { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' } : null)); },
+    async login() {
+      const pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
+      try { await auth.signInWithPopup(pv); }
+      catch (e) {
+        if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment', 'auth/cancelled-popup-request'].includes(e.code)) await auth.signInWithRedirect(pv);
+        else if (e.code !== 'auth/popup-closed-by-user') throw e;
+      }
+    },
+    logout() { return auth.signOut(); }
+  };
+} else {
+  const DKEY = 'BOOKTHO_DEMO_V2', DUSER = 'BOOKTHO_DEMO_USER';
+  let subs = [], authCb = null;
+  const load = () => { try { const r = JSON.parse(localStorage.getItem(DKEY)); if (r) return r; } catch {} const s = seedDemo(); localStorage.setItem(DKEY, JSON.stringify(s)); return s; };
+  const emit = () => { const all = Object.values(load()); subs.forEach(f => f(all)); };
+  Store = {
+    listen(cb) { subs.push(cb); setTimeout(() => cb(Object.values(load())), 300); },
+    async get(uid) { return load()[uid] || null; },
+    async save(uid, data) {
+      const all = load(); all[uid] = { ...data, id: uid, updatedAt: Date.now() };
+      try { localStorage.setItem(DKEY, JSON.stringify(all)); } catch { throw new Error('Bộ nhớ trình duyệt đã đầy (chế độ demo)'); }
+      emit();
+    },
+    async remove(uid) { const all = load(); delete all[uid]; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
+    onAuth(cb) { authCb = cb; let u = null; try { u = JSON.parse(localStorage.getItem(DUSER)); } catch {} cb(u); },
+    async login() { const u = { uid: 'demo_user', name: 'Thợ ảnh Demo', email: 'demo@gmail.com', photo: '' }; localStorage.setItem(DUSER, JSON.stringify(u)); authCb(u); },
+    async logout() { localStorage.removeItem(DUSER); authCb(null); }
+  };
+}
+
+function seedDemo() { return {}; }
+
+/* ══════════ MAP ══════════ */
+const map = L.map('map', { zoomControl: false }).setView(HOME, HOME_ZOOM);
+const lSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+const lStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+lSat.addTo(map);
+let isSat = true;
+const isMob = () => matchMedia('(max-width:820px)').matches;
+let pendingView = null;
+const mapVisible = () => !isMob() || document.body.classList.contains('m-map');
+function flyTo(ll, z) { if (!mapVisible()) { pendingView = { ll, z }; return; } map.flyTo(ll, z, { duration: 1 }); }
+function flyBounds(pts) { if (!mapVisible()) { pendingView = { b: pts }; return; } map.flyToBounds(pts, { padding: [60, 60], maxZoom: 15, duration: 1.2 }); }
+function setMapMode(on) {
+  document.body.classList.toggle('m-map', on);
+  updateBnav();
+  if (on) setTimeout(() => {
+    map.invalidateSize();
+    if (pendingView) { const v = pendingView; pendingView = null; v.b ? map.fitBounds(v.b, { padding: [50, 50], maxZoom: 15 }) : map.setView(v.ll, v.z); }
+  }, 60);
+  else hidePrev();
+}
+function bnav(t) {
+  if (t === 'map') { if (curTab !== 'exp') switchTab('exp'); setMapMode(true); return; }
+  setMapMode(false); switchTab(t);
+}
+function updateBnav() {
+  const m = document.body.classList.contains('m-map');
+  ['exp', 'map', 'me', 'info'].forEach(t => $('#bn-' + t).classList.toggle('on', m ? t === 'map' : t === curTab));
+}
+window.addEventListener('resize', () => { if (!isMob()) document.body.classList.remove('m-map'); map.invalidateSize(); });
+function toggleLayer() {
+  if (isSat) { map.removeLayer(lSat); lStreet.addTo(map); $('#btn-layer').innerHTML = '<i class="fa fa-map"></i>'; }
+  else { map.removeLayer(lStreet); lSat.addTo(map); $('#btn-layer').innerHTML = '<i class="fa fa-satellite"></i>'; }
+  isSat = !isSat;
+}
+function goHome() {
+  const pts = visiblePros().filter(p => isNum(p.lat) && isNum(p.lng)).map(p => [p.lat, p.lng]);
+  if (pts.length > 1) flyBounds(pts);
+  else flyTo(pts[0] || HOME, HOME_ZOOM);
+  if (curTab === 'exp') showList();
+}
+
+/* ══════════ STATE ══════════ */
+let pros = [], me = null, myData = null, curPro = null, curTab = 'exp', curFilter = '', userLoc = null, userMarker = null;
+let proMarkers = {}, editMarker = null, picking = false, firstLoad = true;
+
+const visiblePros = () => pros.filter(p => p.visible !== false && p.name);
+
+/* ══════════ TABS ══════════ */
+function switchTab(id) {
+  curTab = id;
+  ['exp', 'me', 'info'].forEach(t => { $('#tt-' + t).classList.toggle('on', t === id); $('#p-' + t).classList.toggle('on', t === id); });
+  if (id !== 'me') { stopPick(); removeEditMarker(); }
+  else placeEditMarker();
+  renderMarkers(); updateBnav();
+}
+function showView(panel, id) {
+  document.querySelectorAll(`#${panel} .view`).forEach(v => v.classList.toggle('on', v.id === id));
+  $('#' + panel).scrollTop = 0;
+}
+
+/* ══════════ EXPLORE: LIST ══════════ */
+function renderChips() {
+  $('#flt-chips').innerHTML = ['', ...SERVICES].map(s =>
+    `<div class="chip${s === curFilter ? ' on' : ''}" onclick="setFilter('${esc(s)}')">${s ? `<i class="fa ${svcIco(s)}"></i> ${esc(s)}` : 'Tất cả'}</div>`).join('');
+}
+function setFilter(s) { curFilter = s; renderChips(); renderList(); }
+
+function renderList() {
+  const q = norm($('#q').value);
+  let arr = visiblePros().filter(p =>
+    (!curFilter || (p.services || []).includes(curFilter)) &&
+    (!q || norm([p.name, p.address, p.bio, (p.services || []).join(' '), (p.albums || []).map(a => a.title).join(' ')].join(' ')).includes(q)));
+  if (userLoc) {
+    arr.forEach(p => p._d = isNum(p.lat) ? km(userLoc, [p.lat, p.lng]) : 1e9);
+    arr.sort((a, b) => a._d - b._d);
+  } else arr.sort((a, b) => photosOf(b) - photosOf(a));
+  $('#pro-count').textContent = `${arr.length} thợ chụp ảnh`;
+  const list = $('#pro-list');
+  if (!arr.length) { list.innerHTML = visiblePros().length ? `<div class="empty"><i class="fa fa-camera"></i>Không tìm thấy thợ phù hợp</div>` : `<div class="empty"><i class="fa fa-camera"></i>Chưa có thợ nào<br><button class="btnp" style="width:auto;margin:16px auto 0;padding:10px 22px" onclick="switchTab('me')"><i class="fa fa-user-plus"></i>Đăng ký làm thợ</button></div>`; return; }
+  list.innerHTML = arr.map(p => {
+    const thumbs = (p.albums || []).flatMap(a => a.photos || []).slice(0, 5)
+      .map(x => `<img src="${esc(safeUrl(x.t || x.u))}" loading="lazy" alt="" onerror="this.remove()">`).join('');
+    return `<div class="pcard${curPro && curPro.id === p.id ? ' on' : ''}" onclick="openPro('${esc(p.id)}')">
+      <div class="av">${avHtml(p)}</div>
+      <div class="pc-info">
+        <div class="pc-name">${esc(p.name)}</div>
+        <div class="pc-addr"><i class="fa fa-location-dot" style="color:var(--acc);font-size:10px"></i> ${esc(p.address || 'Chưa cập nhật địa chỉ')}</div>
+        ${(p.services || []).length ? `<div class="pc-tags">${p.services.slice(0, 3).map(tagHtml).join('')}${p.services.length > 3 ? `<span class="tag">+${p.services.length - 3}</span>` : ''}</div>` : ''}
+        ${thumbs ? `<div class="pc-strip">${thumbs}</div>` : ''}
+      </div>
+      <div class="pc-side">
+        ${userLoc && p._d < 1e8 ? `<span class="pc-km">${p._d < 1 ? Math.round(p._d * 1000) + ' m' : p._d.toFixed(1) + ' km'}</span>` : '<span></span>'}
+        <span class="pc-cnt"><i class="fa fa-images"></i>${photosOf(p)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showList() {
+  curPro = null; showView('p-exp', 'v-list'); renderList(); highlightMarker();
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+}
+
+/* ══════════ EXPLORE: DETAIL ══════════ */
+function openPro(id, fly = true) {
+  const p = pros.find(x => x.id === id); if (!p) return;
+  curPro = p;
+  if (curTab !== 'exp') switchTab('exp');
+  renderDetail();
+  showView('p-exp', 'v-detail');
+  highlightMarker();
+  if (fly && isNum(p.lat) && isNum(p.lng)) flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16));
+  history.replaceState(null, '', '#p=' + encodeURIComponent(id));
+}
+function renderDetail() {
+  const p = curPro;
+  $('#d-bt').textContent = p.name;
+  const albs = p.albums || [];
+  const cv = albs.map(coverOf).find(Boolean);
+  const phone = digits(p.phone), zalo = digits(p.zalo || p.phone), fb = safeUrl(p.fb);
+  const hasLoc = isNum(p.lat) && isNum(p.lng);
+  const dir = hasLoc ? `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` : '';
+  $('#d-body').innerHTML = `
+    <div class="d-cover">${cv ? `<img src="${esc(safeUrl(cv.u))}" alt="">` : ''}</div>
+    <div class="d-head"><div class="av">${avHtml(p)}</div></div>
+    <div class="d-name">
+      <h2>${esc(p.name)}</h2>
+      ${p.address || hasLoc ? `<div class="d-addr"><i class="fa fa-location-dot"></i><span>${esc(p.address || '')}${hasLoc ? ` <a class="maplink" onclick="showOnMap()"><i class="fa fa-map-location-dot"></i> Xem trên bản đồ</a>` : ''}</span></div>` : ''}
+    </div>
+    <div class="d-acts">
+      <a class="dact call${phone ? '' : ' off'}" href="${phone ? 'tel:' + esc(phone) : '#'}"><i class="fa fa-phone"></i>Gọi</a>
+      <a class="dact zalo${zalo ? '' : ' off'}" href="${zalo ? 'https://zalo.me/' + esc(zalo.replace(/^\+84/, '0')) : '#'}" target="_blank" rel="noopener"><i class="fa fa-comment-dots"></i>Zalo</a>
+      <a class="dact fb${fb ? '' : ' off'}" href="${fb ? esc(fb) : '#'}" target="_blank" rel="noopener"><i class="fa-brands fa-facebook"></i>Facebook</a>
+      <a class="dact dir${dir ? '' : ' off'}" href="${dir ? esc(dir) : '#'}" target="_blank" rel="noopener"><i class="fa fa-diamond-turn-right"></i>Chỉ đường</a>
+    </div>
+    <div class="d-sec">
+      ${p.bio ? `<div class="d-bio">${esc(p.bio)}</div>` : ''}
+      ${(p.services || []).length ? `<div class="d-row">${p.services.map(tagHtml).join('')}</div>` : ''}
+      ${p.price ? `<div class="d-price"><i class="fa fa-tag"></i>${esc(p.price)}</div>` : ''}
+      ${phone || p.email ? `<div style="margin-top:12px;font-size:13px;color:var(--tx2);line-height:1.9">
+        ${phone ? `<div><i class="fa fa-phone" style="width:18px"></i>${esc(p.phone)}</div>` : ''}
+        ${p.email ? `<div><i class="fa fa-envelope" style="width:18px"></i><a href="mailto:${esc(p.email)}" style="color:var(--p)">${esc(p.email)}</a></div>` : ''}
+      </div>` : ''}
+    </div>
+    <div class="d-sec">
+      <div class="sec-t"><i class="fa fa-images"></i>Album ảnh mẫu (${albs.length})</div>
+      ${albs.length ? `<div class="alb-grid">${albs.map((a, i) => {
+        const c = coverOf(a);
+        return `<div class="alb" onclick="openAlbum(${i})">
+          <div class="alb-cv">${c ? `<img src="${esc(safeUrl(c.t || c.u))}" loading="lazy" alt="">` : ''}<span class="alb-n"><i class="fa fa-image"></i> ${(a.photos || []).length}</span></div>
+          <div class="alb-t">${esc(a.title || 'Album')}</div></div>`;
+      }).join('')}</div>` : `<div class="empty" style="padding:24px"><i class="fa fa-images"></i>Chưa có album</div>`}
+    </div>
+    ${phone || zalo ? `<div class="d-sticky">
+      ${phone ? `<a class="sbtn call" href="tel:${esc(phone)}"><i class="fa fa-phone"></i>Gọi ngay</a>` : ''}
+      ${zalo ? `<a class="sbtn zalo" href="https://zalo.me/${esc(zalo.replace(/^\+84/, '0'))}" target="_blank" rel="noopener"><i class="fa fa-comment-dots"></i>Nhắn Zalo</a>` : ''}
+    </div>` : ''}`;
+}
+let curAlbumIdx = -1;
+function openAlbum(i) {
+  const a = (curPro.albums || [])[i]; if (!a) return;
+  curAlbumIdx = i;
+  $('#a-bt').textContent = `${a.title || 'Album'} · ${curPro.name}`;
+  const ph = a.photos || [];
+  $('#a-body').innerHTML = (a.desc ? `<div class="al-desc">${esc(a.desc)}</div>` : '') +
+    `<div class="ph-grid">${ph.map((x, j) => `<div class="ph" onclick="lbOpenAlbum(${j})"><img src="${esc(safeUrl(x.t || x.u))}" loading="lazy" alt=""></div>`).join('')}</div>`;
+  showView('p-exp', 'v-album');
+}
+function lbOpenAlbum(j) { lbOpen(curPro.albums[curAlbumIdx].photos, j); }
+function backToDetail() { showView('p-exp', 'v-detail'); }
+function copyLink() {
+  const url = location.href.split('#')[0] + '#p=' + encodeURIComponent(curPro.id);
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('✔ Đã sao chép link', '#059669'))
+    .catch(() => prompt('Link trang thợ:', url));
+}
+
+/* ══════════ MARKERS ══════════ */
+function renderMarkers() {
+  Object.values(proMarkers).forEach(m => map.removeLayer(m)); proMarkers = {};
+  const editingMe = curTab === 'me' && me;
+  visiblePros().forEach(p => {
+    if (!isNum(p.lat) || !isNum(p.lng)) return;
+    if (editingMe && p.id === me.uid) return;
+    const html = `<div class="pinw${curPro && curPro.id === p.id ? ' on' : ''}"><div class="ph-pin">${avHtml(p)}</div></div>`;
+    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html, className: '', iconSize: [46, 56], iconAnchor: [23, 56] }), riseOnHover: true }).addTo(map);
+    m.bindTooltip(esc(p.name), { direction: 'top', offset: [0, -54] });
+    m.on('click', e => { L.DomEvent.stopPropagation(e); if (picking) return; isMob() ? showPrev(p.id) : openPro(p.id); });
+    proMarkers[p.id] = m;
+  });
+}
+function showPrev(id) {
+  const p = pros.find(x => x.id === id); if (!p) return;
+  curPro = p; highlightMarker();
+  const phone = digits(p.phone), zalo = digits(p.zalo || p.phone);
+  $('#mprev').innerHTML = `
+    <button class="mp-x" onclick="hidePrev()"><i class="fa fa-xmark"></i></button>
+    <div class="mp-top" onclick="openFromPrev()">
+      <div class="av">${avHtml(p)}</div>
+      <div class="pc-info"><div class="pc-name">${esc(p.name)}</div>
+        <div class="pc-addr">${esc(p.address || '')}</div>
+        ${(p.services || []).length ? `<div class="pc-tags">${p.services.slice(0, 3).map(tagHtml).join('')}</div>` : ''}</div>
+    </div>
+    <div class="mp-acts">
+      <button class="mp-b main" onclick="openFromPrev()"><i class="fa fa-images"></i>Xem hồ sơ</button>
+      ${phone ? `<a class="mp-b" href="tel:${esc(phone)}"><i class="fa fa-phone" style="color:var(--ok)"></i>Gọi</a>` : ''}
+      ${zalo ? `<a class="mp-b" href="https://zalo.me/${esc(zalo.replace(/^\+84/, '0'))}" target="_blank" rel="noopener"><i class="fa fa-comment-dots" style="color:#0068ff"></i>Zalo</a>` : ''}
+    </div>`;
+  $('#mprev').classList.add('on'); $('#map-wrap').classList.add('prev');
+  map.panTo([p.lat, p.lng]);
+}
+function hidePrev() { $('#mprev').classList.remove('on'); $('#map-wrap').classList.remove('prev'); }
+function openFromPrev() { const id = curPro && curPro.id; setMapMode(false); if (id) openPro(id, false); }
+function showOnMap() {
+  const p = curPro; if (!p || !isNum(p.lat)) return;
+  if (isMob()) { pendingView = { ll: [p.lat, p.lng], z: 17 }; setMapMode(true); setTimeout(() => showPrev(p.id), 120); }
+  else map.flyTo([p.lat, p.lng], 17, { duration: 1 });
+}
+function highlightMarker() {
+  Object.entries(proMarkers).forEach(([id, m]) => {
+    const el = m.getElement(); if (!el) return;
+    const w = el.querySelector('.pinw'); const on = !!(curPro && curPro.id === id);
+    if (w) w.classList.toggle('on', on);
+    m.setZIndexOffset(on ? 1000 : 0);
+  });
+}
+
+/* ══════════ GẦN TÔI ══════════ */
+function locateMe() {
+  if (!navigator.geolocation) return toast('Trình duyệt không hỗ trợ định vị', '#dc2626');
+  toast('Đang lấy vị trí...', '#1e40af');
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLoc = [pos.coords.latitude, pos.coords.longitude];
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker(userLoc, { icon: L.divIcon({ html: '<div class="me-dot"></div>', className: '', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 500 }).addTo(map).bindTooltip('Bạn ở đây');
+    $('#btn-near').classList.add('on');
+    $('#sort-btn').innerHTML = '<i class="fa fa-location-arrow"></i>Đang sắp xếp gần nhất';
+    flyTo(userLoc, 14);
+    if (curTab !== 'exp') switchTab('exp');
+    showList();
+  }, () => toast('Không lấy được vị trí — hãy cho phép định vị', '#dc2626'), { enableHighAccuracy: true, timeout: 10000 });
+}
+
+/* ══════════ LIGHTBOX ══════════ */
+let lbList = [], lbIdx = 0;
+function lbOpen(list, i = 0) {
+  lbList = (list || []).filter(x => safeUrl(x.u)); if (!lbList.length) return;
+  lbIdx = Math.min(i, lbList.length - 1); $('#lb').classList.add('on'); renderLb();
+}
+function lbClose() { $('#lb').classList.remove('on'); $('#lb-img').src = ''; }
+function lbNav(d) { lbIdx = (lbIdx + d + lbList.length) % lbList.length; renderLb(); }
+function lbJump(i) { lbIdx = i; renderLb(); }
+function renderLb() {
+  $('#lb-img').src = safeUrl(lbList[lbIdx].u);
+  const multi = lbList.length > 1;
+  $('#lb-cnt').textContent = multi ? `${lbIdx + 1} / ${lbList.length}` : '';
+  $('#lb-prv').style.display = $('#lb-nxt').style.display = multi ? 'flex' : 'none';
+  $('#lb-thumbs').innerHTML = multi ? lbList.map((x, i) => `<div class="lb-th${i === lbIdx ? ' on' : ''}" onclick="lbJump(${i})"><img src="${esc(safeUrl(x.t || x.u))}" alt=""></div>`).join('') : '';
+  const th = $('#lb-thumbs .lb-th.on'); if (th) th.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
+document.addEventListener('keydown', e => {
+  if (!$('#lb').classList.contains('on')) return;
+  if (e.key === 'Escape') lbClose(); if (e.key === 'ArrowLeft') lbNav(-1); if (e.key === 'ArrowRight') lbNav(1);
+});
+$('#lb').addEventListener('click', e => { if (e.target.id === 'lb' || e.target.id === 'lb-wrap') lbClose(); });
+let tx0 = null;
+$('#lb').addEventListener('touchstart', e => tx0 = e.touches[0].clientX, { passive: true });
+$('#lb').addEventListener('touchend', e => { if (tx0 == null) return; const dx = e.changedTouches[0].clientX - tx0; if (Math.abs(dx) > 50) lbNav(dx < 0 ? 1 : -1); tx0 = null; });
+
+/* ══════════ AUTH ══════════ */
+async function doLogin() {
+  try { await Store.login(); }
+  catch (e) {
+    const m = e.code === 'auth/unauthorized-domain' ? 'Tên miền chưa được cho phép trong Firebase Auth' : (e.message || e.code);
+    toast('Đăng nhập lỗi: ' + m, '#dc2626');
+  }
+}
+async function doLogout() { if (!confirm('Đăng xuất?')) return; await Store.logout(); toast('Đã đăng xuất'); }
+function defaultProfile(u) {
+  return { name: u.name || '', avatar: u.photo || '', phone: '', zalo: '', fb: '', email: u.email || '', address: '',
+    lat: null, lng: null, services: [], price: '', bio: '', visible: true, albums: [] };
+}
+async function onAuthChanged(u) {
+  me = u;
+  const tab = $('#tt-me');
+  if (!u) {
+    myData = null; tab.innerHTML = '<i class="fa fa-user-pen"></i>'; $('#bn-me').innerHTML = '<i class="fa fa-user-pen"></i><span>Hồ sơ</span>';
+    showView('p-me', 'v-login'); removeEditMarker(); renderMarkers(); return;
+  }
+  try { myData = await Store.get(u.uid); } catch (e) { toast('Lỗi đọc hồ sơ: ' + (e.code || e.message), '#dc2626'); }
+  const isNew = !myData;
+  if (isNew) myData = defaultProfile(u);
+  delete myData.id; delete myData.updatedAt;
+  myData.albums = myData.albums || []; myData.services = myData.services || [];
+  const av = safeUrl(myData.avatar || u.photo);
+  tab.innerHTML = av ? `<img src="${esc(av)}" referrerpolicy="no-referrer" alt="">` : '<i class="fa fa-user-check"></i>';
+  $('#bn-me').innerHTML = tab.innerHTML + '<span>Hồ sơ</span>';
+  fillForm();
+  showView('p-me', 'v-edit');
+  if (isNew) { setMapMode(false); switchTab('me'); toast('Chào ' + (u.name || 'bạn') + '! Hãy hoàn thiện hồ sơ', '#059669'); }
+  else if (curTab === 'me') placeEditMarker();
+  renderMarkers();
+}
+
+/* ══════════ PROFILE FORM ══════════ */
+function fillForm() {
+  const d = myData;
+  $('#me-name').textContent = me.name || d.name; $('#me-email').textContent = me.email;
+  setAv($('#me-av'), { avatar: me.photo, name: me.name });
+  $('#f-name').value = d.name || ''; $('#f-phone').value = d.phone || ''; $('#f-zalo').value = d.zalo || '';
+  $('#f-fb').value = d.fb || ''; $('#f-email').value = d.email || ''; $('#f-addr').value = d.address || '';
+  $('#f-price').value = d.price || ''; $('#f-bio').value = d.bio || ''; $('#f-visible').checked = d.visible !== false;
+  updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord();
+}
+function collectForm() {
+  Object.assign(myData, {
+    name: $('#f-name').value.trim(), phone: $('#f-phone').value.trim(), zalo: $('#f-zalo').value.trim(),
+    fb: $('#f-fb').value.trim(), email: $('#f-email').value.trim(), address: $('#f-addr').value.trim(),
+    price: $('#f-price').value.trim(), bio: $('#f-bio').value.trim(), visible: $('#f-visible').checked
+  });
+  if (myData.fb && !/^https?:\/\//i.test(myData.fb)) myData.fb = 'https://' + myData.fb.replace(/^\/+/, '');
+}
+function updateAvPrev() { setAv($('#f-av-prev'), { avatar: myData.avatar, name: $('#f-name').value || myData.name }); }
+function renderSvcs() {
+  $('#f-svcs').innerHTML = SERVICES.map(s => `<div class="chip${myData.services.includes(s) ? ' on' : ''}" onclick="toggleSvc('${esc(s)}')"><i class="fa ${svcIco(s)}"></i> ${esc(s)}</div>`).join('');
+}
+function toggleSvc(s) { const a = myData.services; const i = a.indexOf(s); i >= 0 ? a.splice(i, 1) : a.push(s); renderSvcs(); }
+function updateCoord() {
+  const el = $('#coord-lbl'), ok = isNum(myData.lat) && isNum(myData.lng);
+  el.className = ok ? 'ok' : '';
+  el.innerHTML = ok ? `<i class="fa fa-circle-check"></i>Đã ghim: ${myData.lat.toFixed(5)}, ${myData.lng.toFixed(5)}`
+                    : `<i class="fa fa-circle-exclamation" style="color:var(--gold)"></i>Chưa ghim vị trí`;
+}
+function cleanData() {
+  const d = JSON.parse(JSON.stringify(myData));
+  if (!isNum(d.lat) || !isNum(d.lng)) { d.lat = null; d.lng = null; }
+  d.albums = (d.albums || []).map(a => ({ id: a.id, title: a.title || '', desc: a.desc || '', cover: a.cover || '', photos: (a.photos || []).map(p => ({ u: p.u, t: p.t || p.u })) }));
+  return d;
+}
+async function persist() { await Store.save(me.uid, cleanData()); }
+async function saveProfile() {
+  collectForm();
+  if (!myData.name) return toast('⚠ Nhập tên hiển thị', '#dc2626');
+  if (!digits(myData.phone) && !digits(myData.zalo) && !safeUrl(myData.fb)) return toast('⚠ Nhập ít nhất một thông tin liên hệ', '#dc2626');
+  const b = $('#btn-save'); b.disabled = true;
+  try {
+    await persist(); toast('✔ Đã lưu hồ sơ', '#059669');
+    if (!isNum(myData.lat)) setTimeout(() => toast('Hãy ghim vị trí để khách thấy bạn trên bản đồ', '#d97706'), 2700);
+  } catch (e) { toast('Lỗi lưu: ' + (e.code || e.message), '#dc2626'); }
+  b.disabled = false;
+}
+async function deleteProfile() {
+  if (!confirm('Xóa toàn bộ hồ sơ và album của bạn? Không thể hoàn tác.')) return;
+  try { await Store.remove(me.uid); myData = defaultProfile(me); fillForm(); placeEditMarker(); toast('Đã xóa hồ sơ', '#059669'); }
+  catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+function viewMyPage() {
+  if (!pros.find(p => p.id === me.uid)) return toast('Hãy lưu hồ sơ trước', '#d97706');
+  openPro(me.uid);
+}
+
+/* Avatar */
+function pickAvatar() { $('#file-av').click(); }
+async function onAvatarFile(inp) {
+  const f = inp.files[0]; inp.value = ''; if (!f) return;
+  toast('Đang tải ảnh...', '#1e40af');
+  try { const r = await uploadImage(f, 600); myData.avatar = r.u; updateAvPrev(); toast('✔ Đã đổi ảnh — nhớ bấm Lưu hồ sơ', '#059669'); }
+  catch (e) { toast(e.message, '#dc2626'); }
+}
+$('#f-name').addEventListener('input', () => { if (myData) updateAvPrev(); });
+
+/* ══════════ VỊ TRÍ ══════════ */
+function setMyLoc(lat, lng, fly = true) {
+  myData.lat = +lat.toFixed(6); myData.lng = +lng.toFixed(6);
+  updateCoord(); placeEditMarker(); if (fly) flyTo([lat, lng], 17);
+}
+function placeEditMarker() {
+  removeEditMarker();
+  if (!me || !myData || curTab !== 'me' || !isNum(myData.lat) || !isNum(myData.lng)) return;
+  const html = `<div class="pinw me"><div class="ph-pin">${avHtml(myData)}</div></div>`;
+  editMarker = L.marker([myData.lat, myData.lng], { draggable: true, zIndexOffset: 2000, icon: L.divIcon({ html, className: '', iconSize: [46, 56], iconAnchor: [23, 56] }) }).addTo(map);
+  editMarker.bindTooltip('Kéo để chỉnh vị trí', { direction: 'top', offset: [0, -54] });
+  editMarker.on('dragend', e => { const p = e.target.getLatLng(); myData.lat = +p.lat.toFixed(6); myData.lng = +p.lng.toFixed(6); updateCoord(); reverseGeo(p.lat, p.lng); });
+}
+function removeEditMarker() { if (editMarker) { map.removeLayer(editMarker); editMarker = null; } }
+function startPick() {
+  if (isMob()) setMapMode(true);
+  picking = true; $('#map').classList.add('picking'); $('#pick-bar').classList.add('on');
+}
+function stopPick() { const was = picking; picking = false; $('#map').classList.remove('picking'); $('#pick-bar').classList.remove('on'); if (was && isMob()) setMapMode(false); }
+map.on('click', e => {
+  if (!picking) { hidePrev(); return; }
+  stopPick(); setMyLoc(e.latlng.lat, e.latlng.lng, false); reverseGeo(e.latlng.lat, e.latlng.lng);
+  toast('📍 Đã ghim — nhớ bấm Lưu hồ sơ', '#059669');
+});
+function useGPS() {
+  if (!navigator.geolocation) return toast('Trình duyệt không hỗ trợ định vị', '#dc2626');
+  toast('Đang lấy vị trí...', '#1e40af');
+  navigator.geolocation.getCurrentPosition(p => {
+    setMyLoc(p.coords.latitude, p.coords.longitude); reverseGeo(p.coords.latitude, p.coords.longitude);
+    toast('📍 Đã ghim vị trí hiện tại — có thể kéo ghim để chỉnh', '#059669');
+  }, () => toast('Không lấy được vị trí — hãy cho phép định vị', '#dc2626'), { enableHighAccuracy: true, timeout: 12000 });
+}
+async function geoSearch() {
+  const q = $('#f-addr').value.trim(); const drop = $('#geo-drop');
+  if (!q) return toast('Nhập địa chỉ cần tìm', '#d97706');
+  drop.style.display = 'block'; drop.innerHTML = '<div class="geo-it">Đang tìm...</div>';
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=vn&accept-language=vi&q=${encodeURIComponent(q)}`);
+    const js = await r.json();
+    if (!js.length) { drop.innerHTML = '<div class="geo-it">Không tìm thấy — hãy dùng "Chọn trên bản đồ"</div>'; return; }
+    window._geo = js;
+    drop.innerHTML = js.map((x, i) => `<div class="geo-it" onclick="pickGeo(${i})"><i class="fa fa-location-dot" style="color:var(--acc)"></i> ${esc(x.display_name)}</div>`).join('');
+  } catch { drop.innerHTML = '<div class="geo-it">Lỗi kết nối</div>'; }
+}
+function pickGeo(i) {
+  const x = window._geo[i]; $('#geo-drop').style.display = 'none';
+  setMyLoc(+x.lat, +x.lon); toast('📍 Đã ghim — kéo ghim để chỉnh chính xác', '#059669');
+}
+async function reverseGeo(lat, lng) {
+  if ($('#f-addr').value.trim()) return;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&accept-language=vi&lat=${lat}&lon=${lng}`);
+    const js = await r.json(); if (js.display_name && !$('#f-addr').value.trim()) $('#f-addr').value = js.display_name.replace(/,\s*\d{5,6}/, '').replace(/,\s*Việt Nam$/, '');
+  } catch {}
+}
+
+/* ══════════ ALBUM CỦA TÔI ══════════ */
+function renderMyAlbums() {
+  const a = myData.albums;
+  $('#my-albums').innerHTML = a.length ? a.map((al, i) => {
+    const c = coverOf(al);
+    return `<div class="my-alb" onclick="openAlbumEditor(${i})">
+      <div class="cv">${c ? `<img src="${esc(safeUrl(c.t || c.u))}" alt="">` : '<i class="fa fa-image"></i>'}</div>
+      <div class="t">${esc(al.title || 'Album')}<div class="n">${(al.photos || []).length} ảnh</div></div>
+      <i class="fa fa-pen" style="color:var(--tx2);font-size:12px;padding:0 6px"></i></div>`;
+  }).join('') : `<div class="empty" style="padding:20px"><i class="fa fa-images"></i>Chưa có album</div>`;
+}
+let alIdx = -1, alDraft = null, uploading = false;
+function openAlbumEditor(i) {
+  collectForm();
+  alIdx = i;
+  alDraft = i >= 0 ? JSON.parse(JSON.stringify(myData.albums[i])) : { id: uid8(), title: '', desc: '', cover: '', photos: [] };
+  $('#ae-bt').textContent = i >= 0 ? 'Sửa album' : 'Album mới';
+  $('#ae-title').value = alDraft.title; $('#ae-desc').value = alDraft.desc || ''; $('#ae-link').value = '';
+  $('#ae-del').style.display = i >= 0 ? 'block' : 'none';
+  renderAeGrid(); showView('p-me', 'v-aledit');
+}
+function closeAlbumEditor() {
+  if (uploading) return toast('Đang tải ảnh, vui lòng đợi', '#d97706');
+  showView('p-me', 'v-edit');
+}
+function renderAeGrid() {
+  const ph = alDraft.photos, cover = (coverOf(alDraft) || {}).u;
+  $('#ae-cnt').textContent = `${ph.length}/${MAX_PHOTOS}`;
+  $('#ae-grid').innerHTML = ph.map((x, j) => `<div class="ed-ph${x.u === cover ? ' cover' : ''}">
+      <img src="${esc(safeUrl(x.t || x.u))}" alt="" onclick="lbOpen(alDraft.photos,${j})" style="cursor:zoom-in">
+      <button class="b star" onclick="setCover(${j})" title="Ảnh bìa"><i class="fa fa-star"></i></button>
+      <button class="b del" onclick="delPhoto(${j})" title="Xóa"><i class="fa fa-xmark"></i></button></div>`).join('') +
+    (ph.length < MAX_PHOTOS ? `<div class="up-tile" onclick="$('#file-ph').click()"><i class="fa fa-cloud-arrow-up"></i>Tải ảnh lên</div>` : '');
+}
+function setCover(j) { alDraft.cover = alDraft.photos[j].u; renderAeGrid(); }
+function delPhoto(j) { const x = alDraft.photos.splice(j, 1)[0]; if (alDraft.cover === x.u) alDraft.cover = ''; renderAeGrid(); }
+function addPhotoLink() {
+  const u = safeUrl($('#ae-link').value); if (!u || u.startsWith('data:')) return toast('⚠ Link ảnh không hợp lệ', '#dc2626');
+  if (alDraft.photos.length >= MAX_PHOTOS) return toast(`Tối đa ${MAX_PHOTOS} ảnh/album`, '#d97706');
+  alDraft.photos.push({ u, t: u }); $('#ae-link').value = ''; renderAeGrid();
+}
+async function onPhotoFiles(inp) {
+  const files = [...inp.files].slice(0, MAX_PHOTOS - alDraft.photos.length); inp.value = '';
+  if (!files.length) return;
+  uploading = true; $('#ae-save').disabled = true;
+  const prog = $('#up-prog'); prog.style.display = 'flex';
+  let ok = 0;
+  for (let i = 0; i < files.length; i++) {
+    prog.querySelector('span').textContent = `Đang tải ảnh ${i + 1}/${files.length}...`;
+    try { alDraft.photos.push(await uploadImage(files[i])); ok++; renderAeGrid(); }
+    catch (e) { toast(e.message, '#dc2626'); if (/IMGBB|đầy/.test(e.message)) break; }
+  }
+  prog.style.display = 'none'; uploading = false; $('#ae-save').disabled = false;
+  if (ok) toast(`✔ Đã tải ${ok} ảnh — nhớ bấm Lưu album`, '#059669');
+}
+async function saveAlbum() {
+  if (uploading) return;
+  alDraft.title = $('#ae-title').value.trim(); alDraft.desc = $('#ae-desc').value.trim();
+  if (!alDraft.title) return toast('⚠ Nhập tên album', '#dc2626');
+  if (!alDraft.photos.length) return toast('⚠ Album chưa có ảnh', '#dc2626');
+  if (alIdx >= 0) myData.albums[alIdx] = alDraft; else myData.albums.push(alDraft);
+  if (!myData.name) myData.name = me.name || 'Thợ ảnh';
+  const b = $('#ae-save'); b.disabled = true;
+  try { await persist(); toast('✔ Đã lưu album', '#059669'); renderMyAlbums(); showView('p-me', 'v-edit'); }
+  catch (e) { toast('Lỗi lưu: ' + (e.code || e.message), '#dc2626'); if (alIdx < 0) myData.albums.pop(); }
+  b.disabled = false;
+}
+async function deleteAlbum() {
+  if (!confirm(`Xóa album "${alDraft.title}"?`)) return;
+  myData.albums.splice(alIdx, 1);
+  try { await persist(); toast('Đã xóa album', '#059669'); } catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+  renderMyAlbums(); showView('p-me', 'v-edit');
+}
+
+/* ══════════ UPLOAD ẢNH ══════════ */
+function compressImage(file, max, q) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Không đọc được ảnh: ' + file.name)); };
+    img.src = url;
+  });
+}
+async function uploadImage(file, max = 2048) {
+  if (!/^image\//.test(file.type)) throw new Error('Không phải file ảnh: ' + file.name);
+  if (IMGBB_KEY) {
+    const data = await compressImage(file, max, .88);
+    const fd = new FormData(); fd.append('image', data.split(',')[1]);
+    const r = await fetch('https://api.imgbb.com/1/upload?key=' + encodeURIComponent(IMGBB_KEY), { method: 'POST', body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!j.success) throw new Error('Tải ảnh lỗi: ' + ((j.error && j.error.message) || r.status));
+    const d = j.data;
+    return { u: d.display_url || d.url, t: (d.medium && d.medium.url) || (d.thumb && d.thumb.url) || d.display_url || d.url };
+  }
+  if (DEMO) return { u: await compressImage(file, Math.min(max, 1000), .72), t: await compressImage(file, 360, .7) };
+  throw new Error('Chưa cấu hình IMGBB_KEY — hãy dán link ảnh');
+}
+
+/* ══════════ KHỞI ĐỘNG ══════════ */
+function onData(list) {
+  pros = list;
+  renderMarkers(); highlightMarker();
+  if (curPro) {
+    const fresh = pros.find(p => p.id === curPro.id);
+    if (fresh) { curPro = fresh; if ($('#v-detail').classList.contains('on')) renderDetail(); }
+    else showList();
+  }
+  if ($('#v-list').classList.contains('on')) renderList();
+  if (firstLoad) {
+    firstLoad = false; $('#loading').style.display = 'none';
+    const m = location.hash.match(/^#p=(.+)$/);
+    if (m && pros.find(p => p.id === decodeURIComponent(m[1]))) openPro(decodeURIComponent(m[1]));
+    else goHome();
+  }
+}
+if (DEMO) console.warn('Chưa cấu hình Firebase — dữ liệu chỉ lưu trên trình duyệt này.');
+renderChips();
+Store.listen(onData);
+Store.onAuth(onAuthChanged);
+setTimeout(() => $('#loading').style.display = 'none', 6000);
+document.addEventListener('click', e => { if (!e.target.closest('.loc-box')) $('#geo-drop').style.display = 'none'; });
+</script>
+</body>
+</html>
