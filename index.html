@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book thợ chụp ảnh</title>
+<title>VIỆT PHOTO BOOKING</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -465,11 +465,60 @@ button.sbtn{border:none;cursor:pointer}
 .nbadge{position:absolute;top:5px;right:20px;background:#dc2626;color:#fff;font-style:normal;font-size:10px;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:800}
 #bk-badge{color:#fde68a}
 a.btnp,a.btnl{text-decoration:none}
+/* ===== v4: topbar PC, đăng ký thợ, quản trị ===== */
+:root{--tile:#e6c6c3;--tile2:#d9a9a5}
+#topbar{display:none}
+.alb-cv .ss{position:absolute;inset:0}
+.pend{margin:10px 16px 0;padding:10px 12px;border-radius:11px;background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;font-size:12.5px;line-height:1.5}
+.lg-p{font-size:13px;color:var(--tx2);line-height:1.5;max-width:340px;margin:-10px 0 18px}
+.lg-or{margin:14px 0 12px;color:var(--tx2);font-size:12px}
+.gbtn.reg{border-color:var(--p);color:var(--p)}
+.tb-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:var(--p);letter-spacing:.5px;white-space:nowrap}
+.tb-logo{width:38px;height:38px;border-radius:11px;background:var(--tile);display:flex;align-items:center;justify-content:center}
+.tb-logo svg,.tb-btn svg,.tb-me svg{width:26px;height:26px}
+.tb-mid{position:absolute;left:50%;top:0;height:100%;transform:translateX(-50%);display:flex;align-items:center;gap:12px}
+.tb-btn,.tb-me{position:relative;border:none;cursor:pointer;background:var(--tile);display:flex;align-items:center;justify-content:center;transition:background .15s}
+.tb-btn{width:96px;height:44px;border-radius:12px}
+.tb-me{width:44px;height:44px;border-radius:50%}
+.tb-me img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.tb-btn:hover,.tb-me:hover,.tb-btn.on{background:var(--tile2)}
+.tb-me.on{background:var(--tile2);box-shadow:0 0 0 2px var(--acc)}
+.tb-btn.on::after{content:'';position:absolute;left:14px;right:14px;bottom:-7px;height:3px;border-radius:3px;background:var(--acc)}
+[data-tip]::before{content:attr(data-tip);position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
+.tb-me[data-tip]::before{left:auto;right:0;transform:none}
+[data-tip]:hover::before{opacity:1}
+#tb-me .nbadge{top:-4px;right:-4px}
+@media(min-width:821px){
+  #topbar{display:flex;align-items:center;justify-content:space-between;height:58px;flex-shrink:0;padding:0 18px;background:#fff;border-bottom:1px solid var(--bdr);box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;z-index:1100}
+  #bnav{display:none}
+  #side{margin-bottom:0}
+  #map-wrap{top:58px;bottom:0}
+  .ex-title h2{display:none}
+  .ex-title{justify-content:flex-end}
+  .alb-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  #toast{top:70px}
+}
+/* ===== v5: banner xám, icon trắng đồng bộ, album hiển thị đủ ảnh ===== */
+.alb-cv{background:#f1f5f9}
+.alb-cv .ss{background:#f1f5f9}
+.alb-cv .ss img{object-fit:contain;background:#f1f5f9}
+.tb-brand{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tb-logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,rgba(255,255,255,.42),rgba(255,255,255,.12));border:1px solid rgba(255,255,255,.5);-webkit-backdrop-filter:blur(12px) saturate(170%);backdrop-filter:blur(12px) saturate(170%);box-shadow:0 4px 14px rgba(0,0,0,.22),inset 0 1px 1px rgba(255,255,255,.7),inset 0 -1px 2px rgba(0,0,0,.08)}
+.tb-btn,.tb-me{background:transparent}
+.tb-btn{width:84px}
+.tb-btn:hover,.tb-me:hover{background:rgba(255,255,255,.16)}
+.tb-btn.on{background:rgba(255,255,255,.18)}
+.tb-btn.on::after{background:#fff;bottom:-8px}
+.tb-me.on{background:rgba(255,255,255,.18);box-shadow:0 0 0 2px #fff}
+.tb-me img{border:2px solid rgba(255,255,255,.75)}
+@media(min-width:821px){
+  #topbar{background:linear-gradient(180deg,#6b7482,#535b68);border-bottom:none;box-shadow:0 2px 12px rgba(15,23,42,.2)}
+}
 </style>
 </head>
 <body>
 
-<div id="loading"><div class="spin"></div><h2>Book thợ chụp ảnh</h2></div>
+<div id="loading"><div class="spin"></div><h2>VIỆT PHOTO BOOKING</h2></div>
 <div id="toast"></div>
 
 <!-- LIGHTBOX -->
@@ -498,6 +547,15 @@ a.btnp,a.btnl{text-decoration:none}
   </div>
 </div>
 
+<!-- TOPBAR (PC) -->
+<div id="topbar">
+  <div class="tb-brand"><span class="tb-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5A2.5 2.5 0 0 1 6 6h1.1a1 1 0 0 0 .8-.4l.9-1.2A1 1 0 0 1 9.6 4h4.8a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4H18a2.5 2.5 0 0 1 2.5 2.5v8A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/><circle cx="12" cy="12.6" r="3.6"/></svg></span>VIỆT PHOTO BOOKING</div>
+  <div class="tb-mid">
+    <button class="tb-btn on" id="tb-exp" data-tip="Trang chủ" aria-label="Trang chủ" onclick="bnav('exp')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4 3.6 10.6v10h6.2v-6.1h4.4v6.1h6.2v-10z"/></svg></button>
+    <button class="tb-btn" id="tb-map" data-tip="Check Map" aria-label="Check Map" onclick="bnav('map')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.5 6.1v13.6L9 17.6l6 2.4 5.5-2.1V4.3L15 6.4z"/><path d="M9 4v13.6M15 6.4V20"/></svg></button>
+  </div>
+  <button class="tb-me" id="tb-me" data-tip="Hồ sơ" aria-label="Hồ sơ" onclick="bnav('me')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.6 20.4c.8-3.7 3.8-5.6 7.4-5.6s6.6 1.9 7.4 5.6"/></svg></button>
+</div>
 <!-- SIDE -->
 <div id="side">
 
@@ -505,7 +563,7 @@ a.btnp,a.btnl{text-decoration:none}
   <div class="panel on" id="p-exp">
     <div class="view on" id="v-list">
       <div class="ex-hd">
-        <div class="ex-title"><h2><i class="fa fa-camera-retro"></i>Book thợ chụp ảnh</h2><button class="qbk" onclick="openBkForm(true)"><i class="fa fa-calendar-plus"></i>Đặt lịch nhanh</button></div>
+        <div class="ex-title"><h2><i class="fa fa-camera-retro"></i>VIỆT PHOTO BOOKING</h2><button class="qbk" onclick="openBkForm(true)"><i class="fa fa-calendar-plus"></i>Đặt lịch nhanh</button></div>
         <div class="srow">
           <div class="sbox"><i class="fa fa-magnifying-glass"></i><input id="q" type="text" placeholder="Tìm tên thợ, khu vực, dịch vụ..." oninput="renderList()"></div>
           <label class="date-f" id="date-f" title="Lọc thợ còn trống lịch"><i class="fa fa-calendar-day"></i><input type="date" id="q-date" onchange="onDateFilter()"><button onclick="event.preventDefault();clearDate()" title="Bỏ lọc"><i class="fa fa-xmark"></i></button></label>
@@ -539,11 +597,32 @@ a.btnp,a.btnl{text-decoration:none}
     <div class="view on" id="v-login">
       <div class="login-card">
         <div class="ico"><i class="fa fa-camera"></i></div>
-        <h3>Đăng nhập để tạo hồ sơ thợ ảnh</h3>
-        <button class="gbtn" onclick="doLogin('me')">
+        <h3>VIỆT PHOTO BOOKING</h3>
+        <p class="lg-p">Đăng nhập để xem và đặt lịch nhanh — thông tin liên hệ được điền sẵn từ hồ sơ của bạn.</p>
+        <button class="gbtn" onclick="doLogin('user')">
           <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
           Đăng nhập bằng Google
         </button>
+        <div class="lg-or">hoặc</div>
+        <button class="gbtn reg" onclick="doLogin('reg')"><i class="fa fa-camera" style="font-size:18px"></i>Đăng ký thợ ảnh / Studio</button>
+        <div class="lg-p" style="margin-top:8px">Đăng nhập để tạo hồ sơ. Hồ sơ cần được quản trị viên phê duyệt trước khi hiển thị công khai.</div>
+      </div>
+    </div>
+
+    <div class="view" id="v-cust">
+      <div class="me-hd">
+        <div class="av" id="cu-av"></div>
+        <div class="mi"><div class="mn" id="cu-name"></div><div class="me" id="cu-email"></div></div>
+        <button class="iconbtn" onclick="doLogout()" title="Đăng xuất" style="color:var(--red)"><i class="fa fa-right-from-bracket"></i></button>
+      </div>
+      <div class="frm">
+        <div class="sdiv"><i class="fa fa-address-card"></i>Thông tin liên hệ khi đặt lịch</div>
+        <div class="fg"><label>Họ tên</label><input id="cu-n" type="text" autocomplete="name"></div>
+        <div class="fg"><label>Số điện thoại</label><input id="cu-p" type="tel" placeholder="09xx xxx xxx" autocomplete="tel"></div>
+        <button class="btnp" onclick="saveContact()"><i class="fa fa-floppy-disk"></i>Lưu thông tin</button>
+        <div class="sdiv" style="margin-top:24px"><i class="fa fa-camera"></i>Bạn là thợ ảnh / Studio?</div>
+        <div class="bk-m" style="margin:0 0 4px">Tạo hồ sơ để khách đặt lịch. Hồ sơ hiển thị công khai sau khi quản trị viên phê duyệt.</div>
+        <button class="btnl" onclick="startRegister()"><i class="fa fa-user-plus"></i>Đăng ký làm thợ ảnh / Studio</button>
       </div>
     </div>
 
@@ -554,10 +633,15 @@ a.btnp,a.btnl{text-decoration:none}
         <button class="iconbtn" onclick="viewMyPage()" title="Xem trang"><i class="fa fa-eye"></i></button>
         <button class="iconbtn" onclick="doLogout()" title="Đăng xuất" style="color:var(--red)"><i class="fa fa-right-from-bracket"></i></button>
       </div>
-      <div class="seg"><button id="sg-bk" onclick="setSeg('bk')"><i class="fa fa-calendar-check"></i> Khách đặt lịch<span id="bk-badge"></span></button><button id="sg-pf" class="on" onclick="setSeg('pf')"><i class="fa fa-camera"></i> Hồ sơ thợ ảnh</button></div>
+      <div class="seg"><button id="sg-bk" onclick="setSeg('bk')"><i class="fa fa-calendar-check"></i> Lịch chụp<span id="bk-badge"></span></button><button id="sg-pf" class="on" onclick="setSeg('pf')"><i class="fa fa-camera"></i> Hồ sơ thợ ảnh</button><button id="sg-ad" style="display:none" onclick="setSeg('ad')"><i class="fa fa-shield-halved"></i> Quản trị<span id="ad-badge"></span></button></div>
+      <div class="pend" id="pend-banner" style="display:none"><i class="fa fa-hourglass-half"></i> Hồ sơ đang chờ quản trị viên phê duyệt. Sau khi được duyệt, hồ sơ mới hiển thị công khai trên trang chủ.</div>
       <div class="frm" id="seg-bk" style="display:none">
-        <div class="sdiv"><i class="fa fa-bell"></i>Khách đặt lịch của tôi</div>
+        <div class="sdiv"><i class="fa fa-bell"></i>Lịch chụp — khách đặt lịch của tôi</div>
         <div id="bk-pro"></div>
+      </div>
+      <div class="frm" id="seg-ad" style="display:none">
+        <div class="sdiv"><i class="fa fa-shield-halved"></i>Quản trị thợ ảnh / Studio</div>
+        <div id="ad-list"></div>
       </div>
       <div class="frm" id="seg-pf">
         <div class="av-edit">
@@ -623,7 +707,7 @@ a.btnp,a.btnl{text-decoration:none}
         <div class="fg"><label>Tên album</label><input id="ae-title" type="text" placeholder="Vd: Ảnh cưới ngoại cảnh"></div>
         <div class="fg"><label>Mô tả</label><textarea id="ae-desc" rows="2"></textarea></div>
         <div class="sdiv"><i class="fa fa-image"></i>Ảnh<span class="sp"></span><span id="ae-cnt" style="letter-spacing:0"></span></div>
-        <div class="bk-m" style="margin:0 0 8px"><i class="fa fa-star" style="color:var(--gold)"></i> = ảnh bìa album &nbsp;·&nbsp; <i class="fa fa-play" style="color:var(--p)"></i> = ảnh hiện trong slide trang cá nhân (không chọn ảnh nào → dùng tất cả ảnh)</div>
+        <div class="bk-m" style="margin:0 0 8px"><i class="fa fa-star" style="color:var(--gold)"></i> = ảnh bìa album &nbsp;·&nbsp; <i class="fa fa-play" style="color:var(--p)"></i> = ảnh ưu tiên hiện ở slide trang chủ (không chọn ảnh nào → dùng tất cả ảnh)</div>
         <div class="ed-grid" id="ae-grid"></div>
         <div id="up-prog"><div class="spin" style="width:16px;height:16px;border-width:2px;border-color:#bfdbfe;border-top-color:var(--p)"></div><span></span></div>
         <div class="link-row"><input id="ae-link" type="url" placeholder="Hoặc dán link ảnh..." onkeydown="if(event.key==='Enter')addPhotoLink()"><button class="sqbtn" onclick="addPhotoLink()" title="Thêm"><i class="fa fa-plus"></i></button></div>
@@ -636,8 +720,8 @@ a.btnp,a.btnl{text-decoration:none}
 </div>
 
 <nav id="bnav">
-  <button class="bn on" id="bn-exp" onclick="bnav('exp')"><svg viewBox="0 0 24 24"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h5.6a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Trang chủ</span></button>
-  <button class="bn" id="bn-map" onclick="bnav('map')"><svg viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.7 5.5-2.2V4.5L15 6.7z"/><path d="M9 4v13.3M15 6.7V20"/></svg><span>Bản đồ</span></button>
+  <button class="bn on" id="bn-exp" onclick="bnav('exp')"><svg viewBox="0 0 24 24"><path d="M12 3.4 3.6 10.6v10h6.2v-6.1h4.4v6.1h6.2v-10z"/></svg><span>Trang chủ</span></button>
+  <button class="bn" id="bn-map" onclick="bnav('map')"><svg viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.7 5.5-2.2V4.5L15 6.7z"/><path d="M9 4v13.3M15 6.7V20"/></svg><span>Check Map</span></button>
   <button class="bn" id="bn-me" onclick="bnav('me')" title="Hồ sơ của tôi"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg><span>Hồ sơ</span></button>
 </nav>
 
@@ -672,11 +756,19 @@ a.btnp,a.btnl{text-decoration:none}
            && request.resource.data.uid == request.auth.uid
            && request.resource.data.proId != request.auth.uid
            && request.resource.data.stars is int && request.resource.data.stars >= 1 && request.resource.data.stars <= 5;
-         allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+         allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
+       }
+       function isAdmin() { return request.auth != null && request.auth.token.email in ['EMAIL_QUAN_TRI@gmail.com']; }
+       match /users/{uid} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
        }
        match /photographers/{uid} {
          allow read: if true;
-         allow write: if request.auth != null && request.auth.uid == uid;
+         allow create: if request.auth != null && request.auth.uid == uid && request.resource.data.approved == false;
+         allow update: if request.auth != null && request.auth.uid == uid
+           && request.resource.data.get('approved', null) == resource.data.get('approved', null);
+         allow delete: if request.auth != null && request.auth.uid == uid;
+         allow create, update, delete: if isAdmin();
        }
      }
    }
@@ -689,6 +781,7 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "588789900119",
   appId: "1:588789900119:web:b187659c3c12f749411412"
 };
+const ADMIN_EMAILS = [];   // ← ĐIỀN email Google của quản trị viên, ví dụ ['ban@gmail.com']  (phải trùng với Firestore Rules)
 const IMGBB_KEY = "005444bd03801687dcc8c6a3465d70ac";   // https://api.imgbb.com → Get API key (miễn phí)
 
 const HOME = [21.3891, 103.0227], HOME_ZOOM = 13;
@@ -745,6 +838,9 @@ if (!DEMO) {
     async get(uid) { const d = await col.doc(uid).get(); return d.exists ? { ...d.data(), id: d.id } : null; },
     async save(uid, data) { await col.doc(uid).set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); },
     async remove(uid) { await col.doc(uid).delete(); },
+    async adminSet(id, patch) { await col.doc(id).update(patch); },
+    async getUser(uid) { const d = await db.collection('users').doc(uid).get(); return d.exists ? d.data() : null; },
+    async saveUser(uid, u) { await db.collection('users').doc(uid).set(u); },
     onAuth(cb) { auth.onAuthStateChanged(u => cb(u ? { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' } : null)); },
     async login() {
       const pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
@@ -778,6 +874,9 @@ if (!DEMO) {
       emit();
     },
     async remove(uid) { const all = load(); delete all[uid]; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
+    async adminSet(id, patch) { const all = load(); if (all[id]) Object.assign(all[id], patch); localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
+    async getUser(uid) { return (JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'))[uid] || null; },
+    async saveUser(uid, u) { const a = JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'); a[uid] = u; localStorage.setItem('BOOKTHO_DEMO_USERS', JSON.stringify(a)); },
     onAuth(cb) { authCb = cb; let u = null; try { u = JSON.parse(localStorage.getItem(DUSER)); } catch {} cb(u); },
     async login() { const u = { uid: 'demo_user', name: 'Thợ ảnh Demo', email: 'demo@gmail.com', photo: '' }; localStorage.setItem(DUSER, JSON.stringify(u)); authCb(u); },
     async logout() { localStorage.removeItem(DUSER); authCb(null); },
@@ -822,7 +921,7 @@ function bnav(t) {
 }
 function updateBnav() {
   const m = document.body.classList.contains('m-map');
-  ['exp', 'map', 'me'].forEach(t => $('#bn-' + t).classList.toggle('on', m ? t === 'map' : t === curTab));
+  ['exp', 'map', 'me'].forEach(t => { const on = m ? t === 'map' : t === curTab; $('#bn-' + t).classList.toggle('on', on); $('#tb-' + t).classList.toggle('on', on); });
 }
 window.addEventListener('resize', () => { if (!isMob()) document.body.classList.remove('m-map'); map.invalidateSize(); });
 function toggleLayer() {
@@ -841,7 +940,7 @@ function goHome() {
 let pros = [], me = null, myData = null, curPro = null, curTab = 'exp', curFilter = '', userLoc = null, userMarker = null;
 let proMarkers = {}, editMarker = null, picking = false, firstLoad = true;
 
-const visiblePros = () => pros.filter(p => p.visible !== false && p.name);
+const visiblePros = () => pros.filter(p => p.visible !== false && p.name && p.approved !== false);
 
 /* ══════════ TABS ══════════ */
 function switchTab(id) {
@@ -987,7 +1086,6 @@ function renderDetail() {
   const hasLoc = isNum(p.lat) && isNum(p.lng);
   const dir = hasLoc ? `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` : '';
   $('#d-body').innerHTML = `
-    ${hasPh ? ssHtml(p, true, 'd-ss') : '<div class="d-ss ss" style="aspect-ratio:auto;height:130px"></div>'}
     <div class="d-id"><div class="av">${avHtml(p)}</div><div style="min-width:0">
       <h2>${esc(p.name)}</h2>
       ${p.address || hasLoc ? `<div class="d-addr"><i class="fa fa-location-dot"></i><span>${esc(p.address || '')}${hasLoc ? ` <a class="maplink" onclick="showOnMap()"><i class="fa fa-map-location-dot"></i> Xem trên bản đồ</a>` : ''}</span></div>` : ''}
@@ -1007,13 +1105,12 @@ function renderDetail() {
       ${albs.length ? `<div class="alb-grid">${albs.map((a, i) => {
         const c = coverOf(a);
         return `<div class="alb" onclick="openAlbum(${i})">
-          <div class="alb-cv">${c ? `<img src="${esc(safeUrl(c.t || c.u))}" loading="lazy" alt="">` : ''}<span class="alb-n"><i class="fa fa-image"></i> ${(a.photos || []).length}</span></div>
+          <div class="alb-cv">${c ? `<div class="ss" data-id="${esc(p.id)}" data-al="${i}"><img class="on" src="${esc(safeUrl(c.t || c.u))}" alt=""><img alt=""></div>` : ''}<span class="alb-n"><i class="fa fa-image"></i> ${(a.photos || []).length}</span></div>
           <div class="alb-t">${esc(a.title || 'Album')}</div></div>`;
       }).join('')}</div>` : `<div class="empty" style="padding:24px"><i class="fa fa-images"></i>Chưa có album</div>`}
     </div>
     <div class="d-sec">
       ${p.bio ? `<div class="d-bio">${esc(p.bio)}</div>` : ''}
-      ${(p.services || []).length ? `<div class="d-row">${p.services.map(tagHtml).join('')}</div>` : ''}
       ${p.price ? `<div class="d-price"><i class="fa fa-tag"></i>${esc(p.price)}</div>` : ''}
       ${p.pay && p.pay.deposit ? `<div class="d-price" style="color:#b45309;background:#fffbeb;margin-left:6px"><i class="fa fa-wallet"></i>Cọc giữ lịch: ${money(p.pay.deposit)}</div>` : ''}
       ${phone || p.email ? `<div style="margin-top:12px;font-size:13px;color:var(--tx2);line-height:1.9">
@@ -1153,31 +1250,83 @@ async function doLogin(from) {
 async function doLogout() { if (!confirm('Đăng xuất?')) return; await Store.logout(); toast('Đã đăng xuất'); }
 function defaultProfile(u) {
   return { name: u.name || '', avatar: u.photo || '', phone: '', zalo: '', fb: '', email: u.email || '', address: '',
-    lat: null, lng: null, services: [], price: '', bio: '', visible: true, albums: [], busy: {}, pay: {} };
+    lat: null, lng: null, services: [], price: '', bio: '', visible: true, albums: [], busy: {}, pay: {}, approved: false };
 }
 const IC_USER = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg>';
-const meNav = av => (av ? `<img src="${esc(av)}" referrerpolicy="no-referrer" alt="">` : IC_USER) + '<span>Hồ sơ</span>';
+let myUser = null, adminToasted = false;
+const isAdmin = () => !!(me && ADMIN_EMAILS.some(x => String(x).toLowerCase() === (me.email || '').toLowerCase()));
+const pendingPros = () => pros.filter(p => p.approved === false);
+const TB_USER = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.6 20.4c.8-3.7 3.8-5.6 7.4-5.6s6.6 1.9 7.4 5.6"/></svg>';
+function setMeNav(av) {
+  const im = av ? `<img src="${esc(av)}" referrerpolicy="no-referrer" alt="">` : '';
+  $('#bn-me').innerHTML = (im || IC_USER) + '<span>Hồ sơ</span>';
+  $('#tb-me').innerHTML = im || TB_USER;
+}
+function updBanner() { const b = $('#pend-banner'); if (b) b.style.display = myData && myData.approved === false ? 'block' : 'none'; }
+function renderCust() {
+  if (!me) return;
+  $('#cu-av').innerHTML = avHtml({ avatar: me.photo, name: me.name }); $('#cu-name').textContent = me.name || 'Khách'; $('#cu-email').textContent = me.email;
+  $('#cu-n').value = (myUser && myUser.name) || me.name || ''; $('#cu-p').value = (myUser && myUser.phone) || '';
+}
+async function saveContact() {
+  const n = $('#cu-n').value.trim(), p = $('#cu-p').value.trim();
+  if (!n) return toast('⚠ Nhập họ tên', '#dc2626');
+  if (p && digits(p).length < 9) return toast('⚠ Số điện thoại chưa hợp lệ', '#dc2626');
+  try { myUser = { name: n, phone: p }; await Store.saveUser(me.uid, myUser); toast('✔ Đã lưu thông tin liên hệ', '#059669'); }
+  catch (e) { toast('Lỗi lưu: ' + (e.code || e.message), '#dc2626'); }
+}
+function startRegister() {
+  fillForm(); showView('p-me', 'v-edit'); setSeg('pf'); placeEditMarker();
+  toast('Điền hồ sơ rồi bấm Lưu — hồ sơ hiển thị sau khi quản trị viên phê duyệt', '#059669');
+}
 async function onAuthChanged(u) {
   me = u;
   if (!u) {
-    myData = null; $('#bn-me').innerHTML = meNav(''); if (unwatchBks) { unwatchBks(); unwatchBks = null; } proBks = []; bkSeen = null; updBadge();
-    showView('p-me', 'v-login'); removeEditMarker(); renderMarkers(); return;
+    myData = null; myUser = null; setMeNav('');
+    if (unwatchBks) { unwatchBks(); unwatchBks = null; } proBks = []; bkSeen = null; updBadge();
+    $('#sg-ad').style.display = 'none'; showView('p-me', 'v-login'); removeEditMarker(); renderMarkers(); return;
   }
-  try { myData = await Store.get(u.uid); } catch (e) { toast('Lỗi đọc hồ sơ: ' + (e.code || e.message), '#dc2626'); }
-  const isNew = !myData;
-  if (isNew) myData = defaultProfile(u);
+  let doc = null;
+  try { doc = await Store.get(u.uid); } catch (e) { toast('Lỗi đọc hồ sơ: ' + (e.code || e.message), '#dc2626'); }
+  try { myUser = await Store.getUser(u.uid); } catch {}
+  myUser = myUser || { name: u.name || '', phone: '' };
+  const isPro = !!doc, intent = loginIntent; loginIntent = '';
+  myData = doc || defaultProfile(u);
   delete myData.id; delete myData.updatedAt;
   myData.albums = myData.albums || []; myData.services = myData.services || []; myData.busy = myData.busy || {}; myData.pay = myData.pay || {};
-  $('#bn-me').innerHTML = meNav(safeUrl(myData.avatar || u.photo));
-  fillForm();
-  showView('p-me', 'v-edit');
-  setSeg(isNew ? 'bk' : 'pf');
-  if (isNew && loginIntent === 'me') { setMapMode(false); switchTab('me'); setSeg('pf'); toast('Chào ' + (u.name || 'bạn') + '! Hãy hoàn thiện hồ sơ', '#059669'); }
-  else if (curTab === 'me') placeEditMarker();
-  const intent = loginIntent; loginIntent = '';
+  setMeNav(safeUrl(isPro ? (myData.avatar || u.photo) : u.photo));
+  fillForm(); renderCust(); updBanner();
+  $('#sg-ad').style.display = isAdmin() ? '' : 'none';
+  if (isPro || isAdmin() || intent === 'reg') {
+    showView('p-me', 'v-edit'); setSeg(isPro ? 'pf' : isAdmin() ? 'ad' : 'pf');
+    if (intent === 'reg' && !isPro) { setMapMode(false); switchTab('me'); toast('Chào ' + (u.name || 'bạn') + '! Điền hồ sơ rồi bấm Lưu — hồ sơ hiển thị sau khi được quản trị viên duyệt', '#059669'); }
+    else if (curTab === 'me') placeEditMarker();
+  } else showView('p-me', 'v-cust');
   renderMarkers(); watchBks(); updBadge();
   if (intent === 'rate' && curPro) openReview();
 }
+function renderAdmin() {
+  const el = $('#ad-list'); if (!el) return;
+  const arr = pros.filter(p => p.name || p.approved === false).sort((a, b) => (a.approved === false ? 0 : 1) - (b.approved === false ? 0 : 1) || String(a.name).localeCompare(String(b.name)));
+  el.innerHTML = arr.length ? arr.map(p => {
+    const pend = p.approved === false, id = esc(p.id);
+    return `<div class="bk-c"><div class="bk-r"><div style="display:flex;gap:10px;align-items:center;min-width:0"><div class="av" style="width:38px;height:38px;font-size:14px;flex-shrink:0">${avHtml(p)}</div><div style="min-width:0"><b>${esc(p.name || '(chưa đặt tên)')}</b><div class="bk-m" style="margin:0">${esc(p.email || '')}</div></div></div>
+      <span class="bk-st" style="color:${pend ? '#b45309' : '#15803d'};background:${pend ? '#fef3c7' : '#dcfce7'}">${pend ? 'Chờ duyệt' : 'Đã duyệt'}</span></div>
+      <div class="bk-m">${esc(p.address || 'Chưa có địa chỉ')} · ${(p.albums || []).length} album · ${photosOf(p)} ảnh</div>
+      <div class="bk-a">${pend ? `<button class="bkb main" onclick="adminSet('${id}',true)">Duyệt</button>` : `<button class="bkb" onclick="adminSet('${id}',false)">Ẩn / thu hồi</button>`}<button class="bkb" onclick="adminView('${id}')">Xem</button><button class="bkb" style="color:#dc2626" onclick="adminDel('${id}')">Xóa</button></div></div>`;
+  }).join('') : '<div class="empty" style="padding:18px"><i class="fa fa-camera"></i>Chưa có thợ / studio nào</div>';
+}
+async function adminSet(id, ok) {
+  try { await Store.adminSet(id, { approved: ok }); toast(ok ? '✔ Đã duyệt — hồ sơ hiển thị công khai' : 'Đã ẩn hồ sơ', '#059669'); }
+  catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+async function adminDel(id) {
+  const p = pros.find(x => x.id === id);
+  if (!confirm(`Xóa vĩnh viễn "${p ? p.name : id}" và toàn bộ album? Không thể hoàn tác.`)) return;
+  try { await Store.remove(id); toast('Đã xóa', '#059669'); }
+  catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
+}
+function adminView(id) { setMapMode(false); switchTab('exp'); openPro(id, false); }
 
 /* ══════════ PROFILE FORM ══════════ */
 function fillForm() {
@@ -1230,7 +1379,7 @@ async function saveProfile() {
   if ((myData.pay.deposit || 0) > 0 && !myData.pay.accNo && !myData.pay.qr) return toast('⚠ Nhập số tài khoản hoặc tải mã QR nhận cọc', '#dc2626');
   const b = $('#btn-save'); b.disabled = true;
   try {
-    await persist(); toast('✔ Đã lưu hồ sơ', '#059669');
+    await persist(); toast(myData.approved === false ? '✔ Đã lưu — hồ sơ đang chờ quản trị viên phê duyệt' : '✔ Đã lưu hồ sơ', '#059669');
     if (!isNum(myData.lat)) setTimeout(() => toast('Hãy ghim vị trí để khách thấy bạn trên bản đồ', '#d97706'), 2700);
   } catch (e) { toast('Lỗi lưu: ' + (e.code || e.message), '#dc2626'); }
   b.disabled = false;
@@ -1342,7 +1491,7 @@ function renderAeGrid() {
   $('#ae-grid').innerHTML = ph.map((x, j) => `<div class="ed-ph${x.u === cover ? ' cover' : ''}">
       <img src="${esc(safeUrl(x.t || x.u))}" alt="" onclick="lbOpen(alDraft.photos,${j})" style="cursor:zoom-in">
       <button class="b star" onclick="setCover(${j})" title="Ảnh bìa album"><i class="fa fa-star"></i></button>
-      <button class="b sl${x.slide ? ' on' : ''}" onclick="toggleSlide(${j})" title="Ảnh trong slide trang cá nhân"><i class="fa fa-play"></i></button>
+      <button class="b sl${x.slide ? ' on' : ''}" onclick="toggleSlide(${j})" title="Ảnh hiện ở slide trang chủ"><i class="fa fa-play"></i></button>
       <button class="b del" onclick="delPhoto(${j})" title="Xóa"><i class="fa fa-xmark"></i></button></div>`).join('') +
     (ph.length < MAX_PHOTOS ? `<div class="up-tile" onclick="$('#file-ph').click()"><i class="fa fa-cloud-arrow-up"></i>Tải ảnh lên</div>` : '');
 }
@@ -1437,7 +1586,8 @@ function ssStart(root) {
     const full = el.dataset.full === '1';
     const tick = first => {
       if (!el.isConnected) return;
-      const q = pros.find(x => x.id === el.dataset.id), pool = q ? ssPool(q, full) : [];
+      const q = pros.find(x => x.id === el.dataset.id), al = el.dataset.al;
+      const pool = q ? (al !== undefined ? ((q.albums || [])[+al] || { photos: [] }).photos.map(x => safeUrl(x.t || x.u)).filter(Boolean) : ssPool(q, full)) : [];
       if (pool.length && (first || el.offsetParent) && !(pool.length === 1 && last)) {
         const cand = pool.length > 1 ? pool.filter(u => u !== last) : pool, url = cand[Math.floor(Math.random() * cand.length)];
         const nx = el.querySelector('img:not(.on)'), cu = el.querySelector('img.on');
@@ -1446,7 +1596,8 @@ function ssStart(root) {
       }
       setTimeout(tick, 4200 + Math.random() * 1800);
     };
-    tick(true);
+    if (el.dataset.al !== undefined) { last = el.querySelector('img.on').getAttribute('src') || ''; setTimeout(() => tick(false), 1800 + Math.random() * 3500); }
+    else tick(true);
   });
 }
 setInterval(() => {
@@ -1478,7 +1629,7 @@ function renderList() {
   if (isWide()) {
     list.innerHTML = arr.map(p => `<div class="bcard" onclick="openPro('${esc(p.id)}')">
       <div class="bc-hd"><div class="av">${avHtml(p)}</div><div class="bc-i"><div class="pc-name">${esc(p.name)}</div>${addr(p)}
-        <div class="bc-meta">${ratingHtml(p.id)}${extra(p)}<span><i class="fa fa-images"></i> ${photosOf(p)}</span></div>${tags(p)}</div></div>
+        <div class="bc-meta">${ratingHtml(p.id)}${extra(p)}<span><i class="fa fa-images"></i> ${photosOf(p)}</span></div></div></div>
       ${ssHtml(p, false)}</div>`).join('');
   } else {
     const plain = q || curFilter || dateF;
@@ -1486,7 +1637,7 @@ function renderList() {
       <div class="hs-ov"><div class="av">${avHtml(p)}</div><div><b>${esc(p.name)}</b><small>${esc(p.address || '')}</small><small>${ratingHtml(p.id)}</small></div></div></div>`).join('')}</div><div class="sec-lb">Tất cả thợ chụp ảnh</div>` : '';
     list.innerHTML = hero + arr.map(p => `<div class="pcard${curPro && curPro.id === p.id ? ' on' : ''}" onclick="openPro('${esc(p.id)}')">
       <div class="av">${avHtml(p)}</div>
-      <div class="pc-info"><div class="pc-name">${esc(p.name)}</div>${addr(p)}<div class="pc-rt">${ratingHtml(p.id)}${extra(p)}</div>${tags(p)}</div>
+      <div class="pc-info"><div class="pc-name">${esc(p.name)}</div>${addr(p)}<div class="pc-rt">${ratingHtml(p.id)}${extra(p)}</div></div>
       <div class="pc-side"><span></span><span class="pc-cnt"><i class="fa fa-images"></i>${photosOf(p)}</span></div></div>`).join('');
   }
   ssStart(list);
@@ -1519,8 +1670,8 @@ async function onQrFile(inp) {
 }
 function clearQr() { collectPay(); delete myData.pay.qr; updQrPrev(); }
 function setSeg(k) {
-  $('#seg-bk').style.display = k === 'bk' ? 'block' : 'none'; $('#seg-pf').style.display = k === 'pf' ? 'block' : 'none';
-  $('#sg-bk').classList.toggle('on', k === 'bk'); $('#sg-pf').classList.toggle('on', k === 'pf');
+  [['bk', 'seg-bk', 'sg-bk'], ['pf', 'seg-pf', 'sg-pf'], ['ad', 'seg-ad', 'sg-ad']].forEach(([key, sec, btn]) => { $('#' + sec).style.display = k === key ? 'block' : 'none'; $('#' + btn).classList.toggle('on', k === key); });
+  if (k === 'ad') renderAdmin();
 }
 function openBkM(h) { $('#bk-sheet').innerHTML = h; $('#bk-sheet').scrollTop = 0; $('#bk-modal').classList.add('on'); }
 function closeBk() { $('#bk-modal').classList.remove('on'); calMode = 'view'; }
@@ -1546,8 +1697,8 @@ function openBkForm(quick) {
     ${quick ? `<div class="fg"><label>Chọn ngày chụp</label><input type="date" id="bk-date" min="${todayStr()}" onchange="onQuickDate(this.value)"></div>`
             : `<div class="bk-sum"><div class="av">${avHtml(bkPro)}</div><div><b>${esc(bkPro.name)}</b><div>${ratingHtml(bkPro.id)}</div></div></div><div class="fg"><label>Chọn ngày (đỏ = đã có lịch)</label><div id="pro-cal"></div></div>`}
     <div id="bk-dyn"></div>
-    <div class="fg"><label>Họ tên</label><input id="bk-name" value="${esc(me ? me.name || '' : '')}" autocomplete="name"></div>
-    <div class="fg"><label>Số điện thoại</label><input id="bk-phone" type="tel" placeholder="09xx xxx xxx" autocomplete="tel"></div>
+    <div class="fg"><label>Họ tên</label><input id="bk-name" value="${esc((myUser && myUser.name) || (me && me.name) || '')}" autocomplete="name"></div>
+    <div class="fg"><label>Số điện thoại</label><input id="bk-phone" type="tel" placeholder="09xx xxx xxx" autocomplete="tel" value="${esc((myUser && myUser.phone) || (myData && myData.phone) || '')}"></div>
     <div id="bk-svc-sec"></div>
     <div class="fg"><label>Địa điểm / ghi chú</label><textarea id="bk-note" rows="3" placeholder="Địa điểm chụp, số người, yêu cầu..."></textarea></div>
     <div id="bk-dep"></div>
@@ -1591,7 +1742,7 @@ async function sendBk() {
   const b = { proId: p.id, proName: p.name, custName: name, custPhone: phone, date: d, slot: bkSlot, service: sv ? sv.value : '',
     note: $('#bk-note').value.trim(), deposit: (p.pay && p.pay.deposit) || 0, status: 'pending', createdAt: Date.now() };
   const btn = $('#bk-send'); btn.disabled = true;
-  try { b.id = await Store.addBk(b); bkSlot = null; payStep(b); toast('✔ Đã gửi yêu cầu — thợ sẽ liên hệ lại bạn', '#059669'); }
+  try { b.id = await Store.addBk(b); bkSlot = null; if (me && myUser && !myUser.phone) { myUser = { name: myUser.name || name, phone }; Store.saveUser(me.uid, myUser).catch(() => {}); } payStep(b); toast('✔ Đã gửi yêu cầu — thợ sẽ liên hệ lại bạn', '#059669'); }
   catch (e) { toast('Lỗi đặt lịch: ' + (e.code || e.message), '#dc2626'); btn.disabled = false; }
 }
 function copyTx(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('✔ Đã sao chép', '#059669')).catch(() => prompt('Sao chép:', t)); }
@@ -1632,10 +1783,10 @@ function watchBks() {
   });
 }
 function updBadge() {
-  const n = proBks.filter(b => b.status === 'pending' || b.status === 'paid').length;
-  document.querySelectorAll('#bn-me .nbadge').forEach(x => x.remove());
-  if (n) $('#bn-me').insertAdjacentHTML('beforeend', `<i class="nbadge">${n}</i>`);
-  $('#bk-badge').textContent = n ? ` (${n})` : '';
+  const nb = proBks.filter(b => b.status === 'pending' || b.status === 'paid').length, na = isAdmin() ? pendingPros().length : 0, n = nb + na;
+  document.querySelectorAll('#bn-me .nbadge,#tb-me .nbadge').forEach(x => x.remove());
+  if (n) ['#bn-me', '#tb-me'].forEach(q => $(q).insertAdjacentHTML('beforeend', `<i class="nbadge">${n}</i>`));
+  $('#bk-badge').textContent = nb ? ` (${nb})` : ''; $('#ad-badge').textContent = na ? ` (${na})` : '';
 }
 async function proAct(id, st) {
   const b = proBks.find(x => x.id === id); if (!b) return;
@@ -1692,6 +1843,15 @@ async function delReview() {
 /* ══════════ KHỞI ĐỘNG ══════════ */
 function onData(list) {
   pros = list;
+  if (me && myData) {
+    const mine = pros.find(x => x.id === me.uid);
+    if (mine) { if (mine.approved === undefined) delete myData.approved; else myData.approved = mine.approved; }
+    updBanner();
+  }
+  if (isAdmin()) {
+    renderAdmin(); updBadge();
+    if (!adminToasted && pendingPros().length) { adminToasted = true; toast(`🔔 Có ${pendingPros().length} hồ sơ thợ ảnh chờ duyệt`, '#d97706'); }
+  }
   renderMarkers(); highlightMarker();
   if (curPro) {
     const fresh = pros.find(p => p.id === curPro.id);
