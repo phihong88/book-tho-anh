@@ -1940,15 +1940,16 @@ function zaloNote(t) { zaloLast = t; zaloStatus('⏳ Đang chờ bạn gửi mã
 async function zaloFetchState(uid) {   // GET ?uid=... → { connected: true/false }
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
   try {
-    const r = await fetch(ZALO_BRIDGE_URL + (ZALO_BRIDGE_URL.includes('?') ? '&' : '?') + 'uid=' + encodeURIComponent(uid), { signal: ctl.signal });
+    const r = await fetch(ZALO_BRIDGE_URL + (ZALO_BRIDGE_URL.includes('?') ? '&' : '?') + 'uid=' + encodeURIComponent(uid) + '&_=' + Date.now(), { signal: ctl.signal, cache: 'no-store' });
     return await r.json();
   } finally { clearTimeout(t); }
 }
+const zaloIsOn = d => !!d && (d.connected === true || d.connected === 'true' || d.connected === 1 || d.status === 'connected' || d.linked === true);
 async function refreshZalo() {   // gọi khi thợ mở hồ sơ
   renderZaloBtn();
   if (!me || !zaloReady() || zaloOn()) return;
   const uid = me.uid;
-  try { const d = await zaloFetchState(uid); if (d && d.connected === true && me && me.uid === uid) { zaloOkUid = uid; renderZaloBtn(); } }
+  try { const d = await zaloFetchState(uid); if (zaloIsOn(d) && me && me.uid === uid) { zaloOkUid = uid; renderZaloBtn(); } }
   catch (e) { console.warn('Zalo bridge:', e); }
 }
 
@@ -1998,8 +1999,8 @@ async function zaloCheck() {
   try {
     const d = await zaloFetchState(uid);
     console.log('Zalo bridge:', d);
-    if (d && d.connected === true && me && me.uid === uid) { zaloLinked(); return; }
-    zaloNote(d && d.error ? 'Cầu nối báo lỗi: ' + d.error : 'Cầu nối hoạt động, chưa thấy mã /start của bạn.');
+    if (zaloIsOn(d) && me && me.uid === uid) { zaloLinked(); return; }
+    zaloNote((d && d.error ? 'Cầu nối báo lỗi: ' + d.error : 'Cầu nối hoạt động, chưa thấy mã /start của bạn.') + '\nCầu nối trả về: ' + JSON.stringify(d).slice(0, 150));
   } catch (e) { console.warn('Zalo bridge:', e); zaloNote('Không gọi được cầu nối Cloudflare Worker (' + (e.message || e) + '). Kiểm tra link Worker và cấu hình CORS (Access-Control-Allow-Origin).'); }
   finally { zaloBusy = false; }
 }
