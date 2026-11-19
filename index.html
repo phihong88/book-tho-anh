@@ -645,6 +645,7 @@ a.btnp,a.btnl{text-decoration:none}
         <button class="iconbtn" onclick="doLogout()" title="Đăng xuất" style="color:var(--red)"><i class="fa fa-right-from-bracket"></i></button>
       </div>
       <div class="seg"><button id="sg-bk" onclick="setSeg('bk')"><i class="fa fa-calendar-check"></i> Lịch chụp<span id="bk-badge"></span></button><button id="sg-pf" class="on" onclick="setSeg('pf')"><i class="fa fa-camera"></i> Hồ sơ thợ ảnh</button><button id="sg-ad" style="display:none" onclick="setSeg('ad')"><i class="fa fa-shield-halved"></i> Quản trị<span id="ad-badge"></span></button></div>
+      <div class="frm" id="zalo-wrap" style="padding-bottom:0"><button type="button" id="zalo-btn" class="btnp" onclick="zaloConnect()"></button></div>
       <div class="pend" id="pend-banner" style="display:none"><i class="fa fa-hourglass-half"></i> Hồ sơ đang chờ quản trị viên phê duyệt. Sau khi được duyệt, hồ sơ mới hiển thị công khai trên trang chủ.</div>
       <div class="frm" id="seg-bk" style="display:none">
         <div class="sdiv"><i class="fa fa-bell"></i>Lịch chụp — khách đặt lịch của tôi</div>
@@ -743,6 +744,8 @@ a.btnp,a.btnl{text-decoration:none}
 <input type="file" id="file-ph" accept="image/*" multiple hidden onchange="onPhotoFiles(this)">
 
 <script>
+const ZALO_BOT_TOKEN = "3954393953813625843:ZgEXXZWmnVHxForZrBWfzDsUAVxwFgATOCiRwsPyHljLbLtPDeWrBplgZpOrPDtO";
+const ZALO_BOT_LINK  = "https://bot.zaloplatforms.com/bots/bot.OOGQHJoK"; // link gốc của Bot; code tự nối thêm ?start=<uid thợ ảnh>
 /* ══════════════════════════════════════════════════════════════
    CẤU HÌNH — dán thông tin Firebase + ImgBB của bạn vào đây.
    Để trống apiKey → app chạy CHẾ ĐỘ DEMO (lưu trên trình duyệt).
@@ -864,6 +867,7 @@ if (!DEMO) {
     async save(uid, data) { await col.doc(uid).set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); },
     async remove(uid) { await col.doc(uid).delete(); },
     async adminSet(id, patch) { await col.doc(id).update(patch); },
+    async setZalo(uid, chatId) { await col.doc(uid).update({ zalo_chat_id: chatId }); },
     async getUser(uid) { const d = await db.collection('users').doc(uid).get(); return d.exists ? d.data() : null; },
     async saveUser(uid, u) { await db.collection('users').doc(uid).set(u); },
     onAuth(cb) { auth.onAuthStateChanged(u => cb(u ? { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' } : null)); },
@@ -900,6 +904,7 @@ if (!DEMO) {
       emit();
     },
     async remove(uid) { const all = load(); delete all[uid]; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
+    async setZalo(uid, chatId) { const all = load(); if (!all[uid]) throw { code: 'not-found' }; all[uid].zalo_chat_id = chatId; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
     async adminSet(id, patch) { const all = load(); if (all[id]) Object.assign(all[id], patch); localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
     async getUser(uid) { return (JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'))[uid] || null; },
     async saveUser(uid, u) { const a = JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'); a[uid] = u; localStorage.setItem('BOOKTHO_DEMO_USERS', JSON.stringify(a)); },
@@ -1371,7 +1376,7 @@ function fillForm() {
   $('#f-name').value = d.name || ''; $('#f-phone').value = d.phone || ''; $('#f-zalo').value = d.zalo || '';
   $('#f-fb').value = d.fb || ''; $('#f-email').value = d.email || ''; $('#f-addr').value = d.address || '';
   $('#f-price').value = d.price || ''; $('#f-bio').value = d.bio || ''; $('#f-visible').checked = d.visible !== false;
-  fillPay(); updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord(); calSel.me = null; calM.me = monthOf(todayStr()); renderMeCal();
+  fillPay(); updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord(); calSel.me = null; calM.me = monthOf(todayStr()); renderMeCal(); renderZaloBtn();
 }
 function collectForm() {
   Object.assign(myData, {
@@ -1777,7 +1782,7 @@ async function sendBk() {
     note: $('#bk-note').value.trim(), deposit: (p.pay && p.pay.deposit) || 0, status: 'pending', createdAt: Date.now() };
   if (me) b.custUid = me.uid;
   const btn = $('#bk-send'); btn.disabled = true;
-  try { b.id = await Store.addBk(b); bkSlot = null; if (me) loadMine(); if (me && myUser && !myUser.phone) { myUser = { name: myUser.name || name, phone }; Store.saveUser(me.uid, myUser).catch(() => {}); } payStep(b); toast('✔ Đã gửi yêu cầu — thợ sẽ liên hệ lại bạn', '#059669'); }
+  try { b.id = await Store.addBk(b); notifyZaloBooking(p, b); bkSlot = null; if (me) loadMine(); if (me && myUser && !myUser.phone) { myUser = { name: myUser.name || name, phone }; Store.saveUser(me.uid, myUser).catch(() => {}); } payStep(b); toast('✔ Đã gửi yêu cầu — thợ sẽ liên hệ lại bạn', '#059669'); }
   catch (e) { toast('Lỗi đặt lịch: ' + (e.code || e.message), '#dc2626'); btn.disabled = false; }
 }
 function copyTx(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('✔ Đã sao chép', '#059669')).catch(() => prompt('Sao chép:', t)); }
@@ -1919,13 +1924,101 @@ async function cusCancel(id) {
   catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
 }
 
+/* ══════════ ZALO BOT: THÔNG BÁO KHI CÓ KHÁCH ĐẶT LỊCH ══════════ */
+const zaloApi = () => `https://bot-api.zaloplatforms.com/bot${ZALO_BOT_TOKEN}`;
+const zaloReady = () => !!ZALO_BOT_TOKEN && !/DAN_TOKEN/.test(ZALO_BOT_TOKEN);
+let zaloTimer = null, zaloBusy = false, zaloPendingAt = 0;
+const myZaloId = () => (myData && myData.zalo_chat_id) || ((me && pros.find(x => x.id === me.uid)) || {}).zalo_chat_id || '';
+
+async function zaloCall(method, body) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 9000);
+  try {
+    const r = await fetch(`${zaloApi()}/${method}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), signal: ctl.signal });
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+const zaloSend = (chat_id, text) => zaloCall('sendMessage', { chat_id: String(chat_id), text: String(text).slice(0, 2000) });
+
+function renderZaloBtn() {
+  const b = $('#zalo-btn'); if (!b) return;
+  const on = !!(me && myZaloId());
+  b.style.background = on ? '#16a34a' : '#0068ff';
+  b.style.cursor = on ? 'default' : 'pointer';
+  b.textContent = on ? '✅ Đã kết nối thông báo Zalo' : '🔔 Kết nối thông báo Zalo khi có khách đặt lịch';
+}
+
+function zaloConnect() {
+  if (!me || myZaloId()) return;
+  if (!zaloReady()) return toast('⚠ Chưa dán ZALO_BOT_TOKEN vào code', '#dc2626');
+  const cmd = '/start ' + me.uid;
+  window.open(ZALO_BOT_LINK + (ZALO_BOT_LINK.includes('?') ? '&' : '?') + 'start=' + encodeURIComponent(me.uid), '_blank', 'noopener');
+  const hint = () => toast('Hãy gửi cho Bot tin nhắn: ' + cmd, '#0068ff');
+  (navigator.clipboard ? navigator.clipboard.writeText(cmd) : Promise.reject())
+    .then(() => toast('Đã sao chép "' + cmd + '" — dán vào chat với Bot rồi gửi', '#0068ff')).catch(hint);
+  zaloPendingAt = Date.now(); startZaloPolling();
+}
+
+function stopZaloPolling() { if (zaloTimer) { clearInterval(zaloTimer); zaloTimer = null; } }
+function startZaloPolling() {   // kiểm tra ngầm mỗi 3 giây trong 1 phút
+  stopZaloPolling(); let n = 0;
+  zaloTimer = setInterval(() => { if (++n > 20 || !me || myZaloId()) return stopZaloPolling(); zaloCheck(); }, 3000);
+  zaloCheck();
+}
+
+async function zaloCheck() {
+  if (zaloBusy || !me || myZaloId() || !zaloReady()) return;
+  zaloBusy = true;
+  try {
+    const j = await zaloCall('getUpdates', { timeout: 2 });
+    if (!j || !j.ok) return;
+    const r = j.result, list = Array.isArray(r) ? r : (r ? [r] : []);
+    for (const u of list) {
+      const m = u.message || u, txt = String(m.text || '').trim();
+      const cid = (m.chat && m.chat.id) || (m.from && m.from.id);
+      if (cid && /^\/start\b/i.test(txt) && txt.split(/\s+/).includes(me.uid)) { await zaloLinked(String(cid)); return; }
+    }
+  } catch (e) { console.warn('Zalo getUpdates:', e); }
+  finally { zaloBusy = false; }
+}
+
+async function zaloLinked(cid) {
+  stopZaloPolling(); zaloPendingAt = 0;
+  myData.zalo_chat_id = cid;
+  try { await Store.setZalo(me.uid, cid); toast('✔ Đã kết nối thông báo Zalo', '#059669'); }
+  catch (e) {
+    if (e && e.code === 'not-found') toast('✔ Đã kết nối Zalo — hãy bấm Lưu hồ sơ để hoàn tất', '#059669');
+    else { delete myData.zalo_chat_id; renderZaloBtn(); return toast('Lỗi lưu Zalo: ' + (e.code || e.message), '#dc2626'); }
+  }
+  renderZaloBtn();
+  zaloSend(cid, '✅ Đã liên kết thành công! Từ giờ bạn sẽ nhận thông báo tại đây mỗi khi có khách đặt lịch trên VIỆT PHOTO BOOKING.').catch(e => console.warn('Zalo sendMessage:', e));
+}
+
+function notifyZaloBooking(p, b) {   // gọi sau khi khách đặt lịch thành công; lỗi Zalo không ảnh hưởng việc đặt lịch
+  try {
+    const cid = p && p.zalo_chat_id; if (!cid || !zaloReady()) return;
+    const ph = digits(b.custPhone).replace(/^\+/, '');
+    const text = ['🔔 CÓ KHÁCH ĐẶT LỊCH MỚI', '',
+      '👤 Khách: ' + b.custName,
+      '📞 SĐT: ' + b.custPhone,
+      '💬 Chat Zalo nhanh: https://zalo.me/' + ph,
+      '📸 Gói chụp: ' + (b.service || 'Chưa chọn'),
+      '📅 Ngày giờ: ' + dayShort(b.date) + ' · ' + slotTxt(b.slot),
+      ...(b.note ? ['📝 Ghi chú: ' + b.note] : []),
+      ...(b.deposit ? ['💰 Tiền cọc: ' + money(b.deposit)] : [])].join('\n');
+    zaloSend(cid, text).catch(e => console.warn('Zalo sendMessage:', e));
+  } catch (e) { console.warn('Zalo notify:', e); }
+}
+document.addEventListener('visibilitychange', () => {   // thợ quay lại trang sau khi bấm kết nối
+  if (!document.hidden && zaloPendingAt && Date.now() - zaloPendingAt < 10 * 60e3 && me && !myZaloId()) startZaloPolling();
+});
+
 /* ══════════ KHỞI ĐỘNG ══════════ */
 function onData(list) {
   pros = list;
   if (me && myData) {
     const mine = pros.find(x => x.id === me.uid);
     if (mine) { if (mine.approved === undefined) delete myData.approved; else myData.approved = mine.approved; }
-    updBanner();
+    updBanner(); renderZaloBtn();
   }
   if (isAdmin()) {
     renderAdmin(); updBadge();
