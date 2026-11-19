@@ -1947,21 +1947,41 @@ function renderZaloBtn() {
   b.textContent = on ? '✅ Đã kết nối thông báo Zalo' : '🔔 Kết nối thông báo Zalo khi có khách đặt lịch';
 }
 
-function zaloConnect() {
+function zaloConnect() {   // bấm nút xanh → hiện bảng hướng dẫn + nút sao chép mã
   if (!me || myZaloId()) return;
   if (!zaloReady()) return toast('⚠ Chưa dán ZALO_BOT_TOKEN vào code', '#dc2626');
   const cmd = '/start ' + me.uid;
-  window.open(ZALO_BOT_LINK + (ZALO_BOT_LINK.includes('?') ? '&' : '?') + 'start=' + encodeURIComponent(me.uid), '_blank', 'noopener');
-  const hint = () => toast('Hãy gửi cho Bot tin nhắn: ' + cmd, '#0068ff');
-  (navigator.clipboard ? navigator.clipboard.writeText(cmd) : Promise.reject())
-    .then(() => toast('Đã sao chép "' + cmd + '" — dán vào chat với Bot rồi gửi', '#0068ff')).catch(hint);
+  openBkM(`<div class="bk-hd"><b>Kết nối thông báo Zalo</b>${xBtn}</div>
+    <div class="bk-m" style="line-height:1.7;margin-bottom:10px">
+      <b>1.</b> Bấm <b>Sao chép mã</b> bên dưới.<br>
+      <b>2.</b> Bấm <b>Mở chat với Bot</b>, rồi bấm <b>Nhắn tin</b> trong trang Zalo.<br>
+      <b>3.</b> Dán mã vào khung chat và bấm <b>Gửi</b>.<br>
+      <b>4.</b> Quay lại trang này, hệ thống tự nhận kết nối trong vài giây.
+    </div>
+    <div id="zalo-cmd" style="background:var(--bg);border-radius:10px;padding:12px;font-family:monospace;font-size:13px;word-break:break-all;user-select:all;text-align:center">${esc(cmd)}</div>
+    <button class="btnp" id="zalo-copy" type="button" onclick="zaloCopy()"><i class="fa fa-copy"></i>Sao chép mã</button>
+    <button class="btnl" type="button" onclick="zaloOpenBot()"><i class="fa fa-arrow-up-right-from-square"></i>Mở chat với Bot</button>
+    <button class="btnl" type="button" onclick="startZaloPolling()"><i class="fa fa-rotate"></i>Tôi đã gửi mã — kiểm tra</button>
+    <div id="zalo-st" class="bk-m" style="text-align:center;margin-top:10px">⏳ Đang chờ bạn gửi mã cho Bot...</div>`);
   zaloPendingAt = Date.now(); startZaloPolling();
 }
+function zaloCopy() {
+  const cmd = '/start ' + me.uid, btn = $('#zalo-copy');
+  const ok = () => { if (btn) btn.innerHTML = '<i class="fa fa-check"></i>Đã sao chép — hãy dán vào chat với Bot'; toast('✔ Đã sao chép mã', '#059669'); };
+  const manual = () => { const el = $('#zalo-cmd'); if (el) { const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('Hãy giữ vào mã và chọn Sao chép', '#d97706'); };
+  (navigator.clipboard ? navigator.clipboard.writeText(cmd) : Promise.reject()).then(ok).catch(manual);
+}
+function zaloOpenBot() {
+  window.open(ZALO_BOT_LINK + (ZALO_BOT_LINK.includes('?') ? '&' : '?') + 'start=' + encodeURIComponent(me.uid), '_blank', 'noopener');
+  zaloPendingAt = Date.now(); startZaloPolling();
+}
+function zaloStatus(t) { const el = $('#zalo-st'); if (el) el.textContent = t; }
 
 function stopZaloPolling() { if (zaloTimer) { clearInterval(zaloTimer); zaloTimer = null; } }
 function startZaloPolling() {   // kiểm tra ngầm mỗi 3 giây trong 1 phút
   stopZaloPolling(); let n = 0;
-  zaloTimer = setInterval(() => { if (++n > 20 || !me || myZaloId()) return stopZaloPolling(); zaloCheck(); }, 3000);
+  zaloStatus('⏳ Đang chờ bạn gửi mã cho Bot...');
+  zaloTimer = setInterval(() => { if (++n > 20 || !me || myZaloId()) { if (n > 20) zaloStatus('Chưa nhận được mã. Hãy gửi mã cho Bot rồi bấm “Tôi đã gửi mã — kiểm tra”.'); return stopZaloPolling(); } zaloCheck(); }, 3000);
   zaloCheck();
 }
 
@@ -1983,6 +2003,7 @@ async function zaloCheck() {
 
 async function zaloLinked(cid) {
   stopZaloPolling(); zaloPendingAt = 0;
+  if ($('#zalo-cmd')) closeBk();
   myData.zalo_chat_id = cid;
   try { await Store.setZalo(me.uid, cid); toast('✔ Đã kết nối thông báo Zalo', '#059669'); }
   catch (e) {
