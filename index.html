@@ -744,7 +744,7 @@ a.btnp,a.btnl{text-decoration:none}
 <input type="file" id="file-ph" accept="image/*" multiple hidden onchange="onPhotoFiles(this)">
 
 <script>
-const ZALO_BOT_TOKEN = "3954393953813625843:ZgEXXZWmnVHxForZrBWfzDsUAVxwFgATOCiRwsPyHljLbLtPDeWrBplgZpOrPDtO";
+const ZALO_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbwbnbZz_Bs9v50OHZ416ate5kh3cMbG6Nz-oGxpZqCqsg3yV77Y3BbpYYJ6A4w2P1j8/exec"; // link Google Apps Script (kết thúc bằng /exec)
 const ZALO_BOT_LINK  = "https://zalo.me/2144590182337444851"; // link gốc của Bot; code tự nối thêm ?start=<uid thợ ảnh>
 /* ══════════════════════════════════════════════════════════════
    CẤU HÌNH — dán thông tin Firebase + ImgBB của bạn vào đây.
@@ -867,7 +867,6 @@ if (!DEMO) {
     async save(uid, data) { await col.doc(uid).set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); },
     async remove(uid) { await col.doc(uid).delete(); },
     async adminSet(id, patch) { await col.doc(id).update(patch); },
-    async setZalo(uid, chatId) { await col.doc(uid).update({ zalo_chat_id: chatId }); },
     async getUser(uid) { const d = await db.collection('users').doc(uid).get(); return d.exists ? d.data() : null; },
     async saveUser(uid, u) { await db.collection('users').doc(uid).set(u); },
     onAuth(cb) { auth.onAuthStateChanged(u => cb(u ? { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' } : null)); },
@@ -904,7 +903,6 @@ if (!DEMO) {
       emit();
     },
     async remove(uid) { const all = load(); delete all[uid]; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
-    async setZalo(uid, chatId) { const all = load(); if (!all[uid]) throw { code: 'not-found' }; all[uid].zalo_chat_id = chatId; localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
     async adminSet(id, patch) { const all = load(); if (all[id]) Object.assign(all[id], patch); localStorage.setItem(DKEY, JSON.stringify(all)); emit(); },
     async getUser(uid) { return (JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'))[uid] || null; },
     async saveUser(uid, u) { const a = JSON.parse(localStorage.getItem('BOOKTHO_DEMO_USERS') || '{}'); a[uid] = u; localStorage.setItem('BOOKTHO_DEMO_USERS', JSON.stringify(a)); },
@@ -1376,7 +1374,7 @@ function fillForm() {
   $('#f-name').value = d.name || ''; $('#f-phone').value = d.phone || ''; $('#f-zalo').value = d.zalo || '';
   $('#f-fb').value = d.fb || ''; $('#f-email').value = d.email || ''; $('#f-addr').value = d.address || '';
   $('#f-price').value = d.price || ''; $('#f-bio').value = d.bio || ''; $('#f-visible').checked = d.visible !== false;
-  fillPay(); updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord(); calSel.me = null; calM.me = monthOf(todayStr()); renderMeCal(); renderZaloBtn();
+  fillPay(); updateAvPrev(); renderSvcs(); renderMyAlbums(); updateCoord(); calSel.me = null; calM.me = monthOf(todayStr()); renderMeCal(); refreshZalo();
 }
 function collectForm() {
   Object.assign(myData, {
@@ -1924,32 +1922,39 @@ async function cusCancel(id) {
   catch (e) { toast('Lỗi: ' + (e.code || e.message), '#dc2626'); }
 }
 
-/* ══════════ ZALO BOT: THÔNG BÁO KHI CÓ KHÁCH ĐẶT LỊCH ══════════ */
-const zaloApi = () => `https://bot-api.zaloplatforms.com/bot${ZALO_BOT_TOKEN}`;
-const zaloReady = () => !!ZALO_BOT_TOKEN && !/DAN_TOKEN/.test(ZALO_BOT_TOKEN);
-let zaloTimer = null, zaloBusy = false, zaloPendingAt = 0;
-const myZaloId = () => (myData && myData.zalo_chat_id) || ((me && pros.find(x => x.id === me.uid)) || {}).zalo_chat_id || '';
-
-async function zaloCall(method, body) {
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 9000);
-  try {
-    const r = await fetch(`${zaloApi()}/${method}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), signal: ctl.signal });
-    return await r.json();
-  } finally { clearTimeout(t); }
-}
-const zaloSend = (chat_id, text) => zaloCall('sendMessage', { chat_id: String(chat_id), text: String(text).slice(0, 2000) });
+/* ══════════ ZALO BOT (qua cầu nối Google Apps Script — không gọi API Zalo trực tiếp, không lộ Token) ══════════ */
+const zaloReady = () => /^https?:\/\//i.test(ZALO_BRIDGE_URL);
+let zaloTimer = null, zaloBusy = false, zaloPendingAt = 0, zaloOkUid = '', zaloLast = '';
+const zaloOn = () => !!(me && zaloOkUid === me.uid);
 
 function renderZaloBtn() {
   const b = $('#zalo-btn'); if (!b) return;
-  const on = !!(me && myZaloId());
+  const on = zaloOn();
   b.style.background = on ? '#16a34a' : '#0068ff';
   b.style.cursor = on ? 'default' : 'pointer';
   b.textContent = on ? '✅ Đã kết nối thông báo Zalo' : '🔔 Kết nối thông báo Zalo khi có khách đặt lịch';
 }
+function zaloStatus(t) { const el = $('#zalo-st'); if (el) el.textContent = t; }
+function zaloNote(t) { zaloLast = t; zaloStatus('⏳ Đang chờ bạn gửi mã cho Bot...\n' + t); }
 
-function zaloConnect() {   // bấm nút xanh → hiện bảng hướng dẫn + nút sao chép mã
-  if (!me || myZaloId()) return;
-  if (!zaloReady()) return toast('⚠ Chưa dán ZALO_BOT_TOKEN vào code', '#dc2626');
+async function zaloFetchState(uid) {   // GET ?uid=... → { connected: true/false }
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+  try {
+    const r = await fetch(ZALO_BRIDGE_URL + (ZALO_BRIDGE_URL.includes('?') ? '&' : '?') + 'uid=' + encodeURIComponent(uid), { signal: ctl.signal });
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+async function refreshZalo() {   // gọi khi thợ mở hồ sơ
+  renderZaloBtn();
+  if (!me || !zaloReady() || zaloOn()) return;
+  const uid = me.uid;
+  try { const d = await zaloFetchState(uid); if (d && d.connected === true && me && me.uid === uid) { zaloOkUid = uid; renderZaloBtn(); } }
+  catch (e) { console.warn('Zalo bridge:', e); }
+}
+
+function zaloConnect() {   // bấm nút xanh → bảng hướng dẫn + nút sao chép mã
+  if (!me || zaloOn()) return;
+  if (!zaloReady()) return toast('⚠ Chưa dán link ZALO_BRIDGE_URL vào code', '#dc2626');
   const cmd = '/start ' + me.uid;
   openBkM(`<div class="bk-hd"><b>Kết nối thông báo Zalo</b>${xBtn}</div>
     <div class="bk-m" style="line-height:1.7;margin-bottom:10px">
@@ -1962,7 +1967,7 @@ function zaloConnect() {   // bấm nút xanh → hiện bảng hướng dẫn +
     <button class="btnp" id="zalo-copy" type="button" onclick="zaloCopy()"><i class="fa fa-copy"></i>Sao chép mã</button>
     <button class="btnl" type="button" onclick="zaloOpenBot()"><i class="fa fa-arrow-up-right-from-square"></i>Mở chat với Bot</button>
     <button class="btnl" type="button" onclick="startZaloPolling()"><i class="fa fa-rotate"></i>Tôi đã gửi mã — kiểm tra</button>
-    <div id="zalo-st" class="bk-m" style="text-align:center;margin-top:10px">⏳ Đang chờ bạn gửi mã cho Bot...</div>`);
+    <div id="zalo-st" class="bk-m" style="text-align:center;margin-top:10px;white-space:pre-line;word-break:break-word">⏳ Đang chờ bạn gửi mã cho Bot...</div>`);
   zaloPendingAt = Date.now(); startZaloPolling();
 }
 function zaloCopy() {
@@ -1975,62 +1980,54 @@ function zaloOpenBot() {
   window.open(ZALO_BOT_LINK + (ZALO_BOT_LINK.includes('?') ? '&' : '?') + 'start=' + encodeURIComponent(me.uid), '_blank', 'noopener');
   zaloPendingAt = Date.now(); startZaloPolling();
 }
-function zaloStatus(t) { const el = $('#zalo-st'); if (el) el.textContent = t; }
 
 function stopZaloPolling() { if (zaloTimer) { clearInterval(zaloTimer); zaloTimer = null; } }
-function startZaloPolling() {   // kiểm tra ngầm mỗi 3 giây trong 1 phút
+function startZaloPolling() {   // kiểm tra ngầm mỗi 3 giây khi bảng đang mở (tối đa ~5 phút)
   stopZaloPolling(); let n = 0;
   zaloStatus('⏳ Đang chờ bạn gửi mã cho Bot...');
-  zaloTimer = setInterval(() => { if (++n > 20 || !me || myZaloId()) { if (n > 20) zaloStatus('Chưa nhận được mã. Hãy gửi mã cho Bot rồi bấm “Tôi đã gửi mã — kiểm tra”.'); return stopZaloPolling(); } zaloCheck(); }, 3000);
+  zaloTimer = setInterval(() => {
+    if (++n > 100 || !me || zaloOn() || !$('#zalo-cmd')) return stopZaloPolling();
+    zaloCheck();
+  }, 3000);
   zaloCheck();
 }
-
 async function zaloCheck() {
-  if (zaloBusy || !me || myZaloId() || !zaloReady()) return;
+  if (zaloBusy || !me || zaloOn() || !zaloReady()) return;
   zaloBusy = true;
+  const uid = me.uid;
   try {
-    const j = await zaloCall('getUpdates', { timeout: 2 });
-    if (!j || !j.ok) return;
-    const r = j.result, list = Array.isArray(r) ? r : (r ? [r] : []);
-    for (const u of list) {
-      const m = u.message || u, txt = String(m.text || '').trim();
-      const cid = (m.chat && m.chat.id) || (m.from && m.from.id);
-      if (cid && /^\/start\b/i.test(txt) && txt.split(/\s+/).includes(me.uid)) { await zaloLinked(String(cid)); return; }
-    }
-  } catch (e) { console.warn('Zalo getUpdates:', e); }
+    const d = await zaloFetchState(uid);
+    console.log('Zalo bridge:', d);
+    if (d && d.connected === true && me && me.uid === uid) { zaloLinked(); return; }
+    zaloNote(d && d.error ? 'Cầu nối báo lỗi: ' + d.error : 'Cầu nối hoạt động, chưa thấy mã /start của bạn.');
+  } catch (e) { console.warn('Zalo bridge:', e); zaloNote('Không gọi được cầu nối Google Apps Script (' + (e.message || e) + '). Kiểm tra link /exec và quyền truy cập “Anyone”.'); }
   finally { zaloBusy = false; }
 }
-
-async function zaloLinked(cid) {
-  stopZaloPolling(); zaloPendingAt = 0;
+function zaloLinked() {
+  stopZaloPolling(); zaloPendingAt = 0; zaloOkUid = me.uid;
   if ($('#zalo-cmd')) closeBk();
-  myData.zalo_chat_id = cid;
-  try { await Store.setZalo(me.uid, cid); toast('✔ Đã kết nối thông báo Zalo', '#059669'); }
-  catch (e) {
-    if (e && e.code === 'not-found') toast('✔ Đã kết nối Zalo — hãy bấm Lưu hồ sơ để hoàn tất', '#059669');
-    else { delete myData.zalo_chat_id; renderZaloBtn(); return toast('Lỗi lưu Zalo: ' + (e.code || e.message), '#dc2626'); }
-  }
-  renderZaloBtn();
-  zaloSend(cid, '✅ Đã liên kết thành công! Từ giờ bạn sẽ nhận thông báo tại đây mỗi khi có khách đặt lịch trên VIỆT PHOTO BOOKING.').catch(e => console.warn('Zalo sendMessage:', e));
+  renderZaloBtn(); toast('✔ Đã kết nối thông báo Zalo', '#059669');
 }
 
 function notifyZaloBooking(p, b) {   // gọi sau khi khách đặt lịch thành công; lỗi Zalo không ảnh hưởng việc đặt lịch
   try {
-    const cid = p && p.zalo_chat_id; if (!cid || !zaloReady()) return;
+    if (!p || !p.id || !zaloReady()) return;
     const ph = digits(b.custPhone).replace(/^\+/, '');
-    const text = ['🔔 CÓ KHÁCH ĐẶT LỊCH MỚI', '',
+    const messageText = ['🔔 CÓ KHÁCH ĐẶT LỊCH MỚI', '',
       '👤 Khách: ' + b.custName,
       '📞 SĐT: ' + b.custPhone,
       '💬 Chat Zalo nhanh: https://zalo.me/' + ph,
       '📸 Gói chụp: ' + (b.service || 'Chưa chọn'),
       '📅 Ngày giờ: ' + dayShort(b.date) + ' · ' + slotTxt(b.slot),
       ...(b.note ? ['📝 Ghi chú: ' + b.note] : []),
-      ...(b.deposit ? ['💰 Tiền cọc: ' + money(b.deposit)] : [])].join('\n');
-    zaloSend(cid, text).catch(e => console.warn('Zalo sendMessage:', e));
+      ...(b.deposit ? ['💰 Tiền cọc: ' + money(b.deposit)] : [])].join('\n').slice(0, 2000);
+    // body là chuỗi (text/plain) để không bị chặn CORS preflight của Apps Script
+    fetch(ZALO_BRIDGE_URL, { method: 'POST', body: JSON.stringify({ action: 'send_booking', photographerUid: p.id, messageText }) })
+      .catch(e => console.warn('Zalo bridge send:', e));
   } catch (e) { console.warn('Zalo notify:', e); }
 }
-document.addEventListener('visibilitychange', () => {   // thợ quay lại trang sau khi bấm kết nối
-  if (!document.hidden && zaloPendingAt && Date.now() - zaloPendingAt < 10 * 60e3 && me && !myZaloId()) startZaloPolling();
+document.addEventListener('visibilitychange', () => {   // thợ quay lại trang sau khi gửi mã
+  if (!document.hidden && zaloPendingAt && Date.now() - zaloPendingAt < 10 * 60e3 && me && !zaloOn() && $('#zalo-cmd')) startZaloPolling();
 });
 
 /* ══════════ KHỞI ĐỘNG ══════════ */
