@@ -2021,7 +2021,7 @@ function notifyZaloBooking(p, b) {   // gọi sau khi khách đặt lịch thàn
       '📸 Gói chụp: ' + (b.service || 'Chưa chọn'),
       '📅 Ngày giờ: ' + dayShort(b.date) + ' · ' + slotTxt(b.slot),
       ...(b.note ? ['📝 Ghi chú: ' + b.note] : []),
-      ...(b.deposit ? ['💰 Tiền cọc: ' + money(b.deposit)] : [])].join('\n').slice(0, 2000);
+      ...(b.deposit ? ['💰 Tiền cọc thợ yêu cầu: ' + money(b.deposit) + ' (khách chưa báo đã chuyển)'] : [])].join('\n').slice(0, 2000);
     // body là chuỗi (text/plain) để không bị chặn CORS preflight của Apps Script
     fetch(ZALO_BRIDGE_URL, { method: 'POST', body: JSON.stringify({ action: 'send_booking', photographerUid: p.id, messageText }) })
       .catch(e => console.warn('Zalo bridge send:', e));
