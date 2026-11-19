@@ -744,7 +744,7 @@ a.btnp,a.btnl{text-decoration:none}
 <input type="file" id="file-ph" accept="image/*" multiple hidden onchange="onPhotoFiles(this)">
 
 <script>
-const ZALO_BRIDGE_URL = "https://viet-photo-bot.pr-hongvn.workers.dev"; // link Google Apps Script (kết thúc bằng /exec)
+const ZALO_BRIDGE_URL = "https://viet-photo-bot.pr-hongvn.workers.dev"; // link cầu nối Cloudflare Worker
 const ZALO_BOT_LINK  = "https://zalo.me/2144590182337444851"; // link gốc của Bot; code tự nối thêm ?start=<uid thợ ảnh>
 /* ══════════════════════════════════════════════════════════════
    CẤU HÌNH — dán thông tin Firebase + ImgBB của bạn vào đây.
@@ -2000,7 +2000,7 @@ async function zaloCheck() {
     console.log('Zalo bridge:', d);
     if (d && d.connected === true && me && me.uid === uid) { zaloLinked(); return; }
     zaloNote(d && d.error ? 'Cầu nối báo lỗi: ' + d.error : 'Cầu nối hoạt động, chưa thấy mã /start của bạn.');
-  } catch (e) { console.warn('Zalo bridge:', e); zaloNote('Không gọi được cầu nối Google Apps Script (' + (e.message || e) + '). Kiểm tra link /exec và quyền truy cập “Anyone”.'); }
+  } catch (e) { console.warn('Zalo bridge:', e); zaloNote('Không gọi được cầu nối Cloudflare Worker (' + (e.message || e) + '). Kiểm tra link Worker và cấu hình CORS (Access-Control-Allow-Origin).'); }
   finally { zaloBusy = false; }
 }
 function zaloLinked() {
