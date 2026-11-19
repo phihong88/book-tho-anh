@@ -1878,7 +1878,7 @@ function openReview(bid) {
   let b = null;
   if (bid) b = myBks.find(x => x.id === bid);
   else if (curPro) { const ok = myBks.filter(x => x.proId === curPro.id && x.status === 'confirmed'); b = ok.find(x => !reviews.some(r => r.id === x.id)) || ok[0]; }
-  if (!b || b.status !== 'confirmed') return toast('Chỉ khách đã đặt lịch và được thợ chốt lịch mới đánh giá được', '#d97706');
+  if (!b || b.status !== 'confirmed') return toast('Bạn chưa đặt lịch chụp không thể đánh giá', '#d97706');
   const mine = reviews.find(r => r.id === b.id); rvStars = mine ? mine.stars : 0; rvBk = b;
   openBkM(`<div class="bk-hd"><b>Đánh giá ${esc(b.proName)}</b>${xBtn}</div><div class="rv-pick" id="rv-pick"></div>
     <div class="fg"><textarea id="rv-text" rows="3" maxlength="300" placeholder="Chia sẻ trải nghiệm (không bắt buộc)">${esc(mine ? mine.text || '' : '')}</textarea></div>
