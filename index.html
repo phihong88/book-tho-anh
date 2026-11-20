@@ -96,6 +96,20 @@ input,textarea,select{font-family:inherit}
 .chip{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1.5px solid var(--bdr);background:var(--sur);font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .15s}
 .chip:hover{border-color:var(--p);color:var(--p)}
 .chip.on{background:var(--p);border-color:var(--p);color:#fff}
+.inf-card{margin:12px 16px 0;border:1.5px solid var(--bdr);border-radius:var(--r);background:var(--sur);overflow:hidden}
+.inf-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13px;font-weight:700;color:var(--p);user-select:none}
+.inf-card summary::-webkit-details-marker{display:none}
+.inf-card summary>span{flex:1}
+.inf-card summary .fa-shield-halved{font-size:16px}
+.inf-ar{font-size:11px;color:var(--tx2);transition:transform .2s}
+.inf-card[open] .inf-ar{transform:rotate(180deg)}
+.inf-b{padding:2px 14px 14px;display:grid;gap:11px;border-top:1px solid var(--bdr)}
+.inf-it{display:flex;gap:11px;align-items:flex-start;margin-top:11px}
+.inf-it>i{flex-shrink:0;width:30px;height:30px;border-radius:9px;background:var(--bg);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:13px}
+.inf-it b{display:block;font-size:13px;color:var(--tx);margin-bottom:1px}
+.inf-it span{display:block;font-size:12px;line-height:1.5;color:var(--tx2)}
+.inf-note{font-size:11.5px;line-height:1.5;color:var(--gold);background:#fffbeb;border-radius:9px;padding:9px 11px}
+.wm-fb{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
 .ex-meta{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;font-size:12px;color:var(--tx2)}
 .sortbtn{border:none;background:none;color:var(--p);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
 #pro-list{padding:10px 16px 20px;display:flex;flex-direction:column;gap:9px}
@@ -582,6 +596,18 @@ a.btnp,a.btnl{text-decoration:none}
         </div>
         <div class="chips" id="flt-chips"></div>
       </div>
+      <details class="inf-card" id="inf-card">
+        <summary><i class="fa fa-shield-halved"></i><span>Đặt lịch an tâm — quyền lợi của khách hàng</span><i class="fa fa-chevron-down inf-ar"></i></summary>
+        <div class="inf-b">
+          <div class="inf-it"><i class="fa fa-user-check"></i><div><b>Thợ ảnh được kiểm duyệt</b><span>Hồ sơ chỉ hiển thị công khai sau khi quản trị viên phê duyệt.</span></div></div>
+          <div class="inf-it"><i class="fa fa-address-card"></i><div><b>Thông tin rõ ràng, minh bạch</b><span>Xem tên/studio, khu vực, dịch vụ, mức giá và album ảnh mẫu thật của thợ trước khi quyết định.</span></div></div>
+          <div class="inf-it"><i class="fa fa-comments"></i><div><b>Liên hệ trực tiếp với thợ</b><span>Gọi điện, nhắn Zalo hoặc xem Facebook của thợ ngay trên trang hồ sơ để trao đổi kỹ trước khi đặt.</span></div></div>
+          <div class="inf-it"><i class="fa fa-calendar-check"></i><div><b>Xem lịch trống, đặt lịch nhanh</b><span>Chọn ngày và buổi chụp còn trống; đơn đặt lịch được gửi tới thợ ngay.</span></div></div>
+          <div class="inf-it"><i class="fa fa-star"></i><div><b>Đánh giá đáng tin cậy</b><span>Chỉ khách đã đặt lịch và được thợ chốt lịch mới có thể đánh giá thợ.</span></div></div>
+          <div class="inf-it"><i class="fa fa-map-location-dot"></i><div><b>Tìm thợ gần bạn</b><span>Dùng Check Map để xem vị trí và chọn thợ ảnh gần nơi bạn muốn chụp.</span></div></div>
+          <div class="inf-note"><i class="fa fa-triangle-exclamation"></i> Lưu ý: nếu thợ yêu cầu đặt cọc, hãy chuyển khoản đúng thông tin/mã QR hiển thị trong đơn đặt lịch của thợ đó và kiểm tra kỹ hồ sơ thợ trước khi chuyển.</div>
+        </div>
+      </details>
       <div class="ex-meta"><span id="pro-count"></span><button class="sortbtn" id="sort-btn" onclick="locateMe()"><i class="fa fa-location-arrow"></i>Gần tôi</button></div>
       <div id="pro-list"></div>
     </div>
@@ -1143,7 +1169,7 @@ function renderDetail() {
       ${albs.length ? `<div class="alb-grid">${albs.map((a, i) => {
         const c = coverOf(a);
         return `<div class="alb" onclick="openAlbum(${i})">
-          <div class="alb-cv">${c ? `<div class="ss" data-id="${esc(p.id)}" data-al="${i}"><img class="on" src="${esc(safeUrl(c.t || c.u))}" alt=""><img alt=""></div>` : ''}<span class="alb-n"><i class="fa fa-image"></i> ${(a.photos || []).length}</span></div>
+          <div class="alb-cv">${c ? `<div class="ss" data-id="${esc(p.id)}" data-al="${i}"><img class="on" data-wm="${esc(safeUrl(c.t || c.u))}" data-wmo="${esc(p.name)}" alt=""><img alt=""></div>` : ''}<span class="alb-n"><i class="fa fa-image"></i> ${(a.photos || []).length}</span></div>
           <div class="alb-t">${esc(a.title || 'Album')}</div></div>`;
       }).join('')}</div>` : `<div class="empty" style="padding:24px"><i class="fa fa-images"></i>Chưa có album</div>`}
     </div>
@@ -1171,7 +1197,7 @@ function openAlbum(i) {
   $('#a-bt').textContent = `${a.title || 'Album'} · ${curPro.name}`;
   const ph = a.photos || [];
   $('#a-body').innerHTML = (a.desc ? `<div class="al-desc">${esc(a.desc)}</div>` : '') +
-    `<div class="ph-grid">${ph.map((x, j) => `<div class="ph" onclick="lbOpenAlbum(${j})"><img src="${esc(safeUrl(x.t || x.u))}" loading="lazy" alt=""></div>`).join('')}</div>`;
+    `<div class="ph-grid">${ph.map((x, j) => `<div class="ph" onclick="lbOpenAlbum(${j})"><img data-wm="${esc(safeUrl(x.t || x.u))}" data-wmo="${esc(curPro.name)}" alt=""></div>`).join('')}</div>`;
   showView('p-exp', 'v-album');
 }
 function lbOpenAlbum(j) { lbOpen(curPro.albums[curAlbumIdx].photos, j); }
@@ -1249,20 +1275,22 @@ function locateMe() {
 }
 
 /* ══════════ LIGHTBOX ══════════ */
-let lbList = [], lbIdx = 0;
-function lbOpen(list, i = 0) {
+let lbList = [], lbIdx = 0, lbOwner = '';
+function lbOpen(list, i = 0, owner) {
   lbList = (list || []).filter(x => safeUrl(x.u)); if (!lbList.length) return;
+  lbOwner = owner || (typeof curPro !== 'undefined' && curPro && curPro.name) || '';
   lbIdx = Math.min(i, lbList.length - 1); $('#lb').classList.add('on'); renderLb();
 }
-function lbClose() { $('#lb').classList.remove('on'); $('#lb-img').src = ''; }
+function lbClose() { $('#lb').classList.remove('on'); const im = $('#lb-img'); im._wmTok = (im._wmTok || 0) + 1; im.src = ''; im.style.opacity = ''; }
 function lbNav(d) { lbIdx = (lbIdx + d + lbList.length) % lbList.length; renderLb(); }
 function lbJump(i) { lbIdx = i; renderLb(); }
 function renderLb() {
-  $('#lb-img').src = safeUrl(lbList[lbIdx].u);
+  const lim = $('#lb-img'); lim.style.opacity = .3; lim.onload = () => { lim.style.opacity = ''; };
+  wmApply(lim, safeUrl(lbList[lbIdx].u), lbOwner);
   const multi = lbList.length > 1;
   $('#lb-cnt').textContent = multi ? `${lbIdx + 1} / ${lbList.length}` : '';
   $('#lb-prv').style.display = $('#lb-nxt').style.display = multi ? 'flex' : 'none';
-  $('#lb-thumbs').innerHTML = multi ? lbList.map((x, i) => `<div class="lb-th${i === lbIdx ? ' on' : ''}" onclick="lbJump(${i})"><img src="${esc(safeUrl(x.t || x.u))}" alt=""></div>`).join('') : '';
+  $('#lb-thumbs').innerHTML = multi ? lbList.map((x, i) => `<div class="lb-th${i === lbIdx ? ' on' : ''}" onclick="lbJump(${i})"><img data-wm="${esc(safeUrl(x.t || x.u))}" data-wmo="${esc(lbOwner)}" alt=""></div>`).join('') : '';
   const th = $('#lb-thumbs .lb-th.on'); if (th) th.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 document.addEventListener('keydown', e => {
@@ -1527,7 +1555,7 @@ function renderAeGrid() {
   const ph = alDraft.photos, cover = (coverOf(alDraft) || {}).u;
   $('#ae-cnt').textContent = `${ph.length}/${MAX_PHOTOS}`;
   $('#ae-grid').innerHTML = ph.map((x, j) => `<div class="ed-ph${x.u === cover ? ' cover' : ''}">
-      <img src="${esc(safeUrl(x.t || x.u))}" alt="" onclick="lbOpen(alDraft.photos,${j})" style="cursor:zoom-in">
+      <img src="${esc(safeUrl(x.t || x.u))}" alt="" onclick="lbOpen(alDraft.photos,${j},myData.name)" style="cursor:zoom-in">
       <button class="b star" onclick="setCover(${j})" title="Ảnh bìa album"><i class="fa fa-star"></i></button>
       <button class="b sl${x.slide ? ' on' : ''}" onclick="toggleSlide(${j})" title="Ảnh hiện ở slide trang chủ"><i class="fa fa-play"></i></button>
       <button class="b del" onclick="delPhoto(${j})" title="Xóa"><i class="fa fa-xmark"></i></button></div>`).join('') +
@@ -1630,11 +1658,11 @@ function ssStart(root) {
         const cand = pool.length > 1 ? pool.filter(u => u !== last) : pool, url = cand[Math.floor(Math.random() * cand.length)];
         const nx = el.querySelector('img:not(.on)'), cu = el.querySelector('img.on');
         nx.onload = () => { nx.classList.add('on'); if (cu !== nx) cu.classList.remove('on'); };
-        nx.src = url; last = url;
+        wmApply(nx, url, q ? q.name : ''); last = url;
       }
       setTimeout(tick, 4200 + Math.random() * 1800);
     };
-    if (el.dataset.al !== undefined) { last = el.querySelector('img.on').getAttribute('src') || ''; setTimeout(() => tick(false), 1800 + Math.random() * 3500); }
+    if (el.dataset.al !== undefined) { { const oi = el.querySelector('img.on'); last = oi.dataset.wm || oi.getAttribute('src') || ''; } setTimeout(() => tick(false), 1800 + Math.random() * 3500); }
     else tick(true);
   });
 }
@@ -2030,6 +2058,56 @@ function notifyZaloBooking(p, b) {   // gọi sau khi khách đặt lịch thàn
 document.addEventListener('visibilitychange', () => {   // thợ quay lại trang sau khi gửi mã
   if (!document.hidden && zaloPendingAt && Date.now() - zaloPendingAt < 10 * 60e3 && me && !zaloOn() && $('#zalo-cmd')) startZaloPolling();
 });
+
+/* ══════════ ĐÓNG DẤU BẢN QUYỀN ẢNH ══════════
+   Ảnh thợ ảnh hiển thị trên trang được vẽ lại kèm 1 dòng chữ nhỏ mờ chạy ngang ảnh: "© Tên thợ / studio".
+   Khi người xem nhấn giữ / chuột phải "Lưu ảnh" thì file lưu về là ảnh đã có dấu. */
+const WM_ALPHA = 0.34;   // độ mờ của chữ (0–1), nhỏ hơn = mờ hơn
+const WM_POS = 0.5;      // vị trí dòng chữ theo chiều cao ảnh (0 = mép trên, 0.5 = giữa, 1 = mép dưới)
+const wmCache = new Map();
+function wmCanvas(img, name) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, w, h);
+  const fs = Math.max(11, Math.round(Math.min(w, h) * 0.03));
+  g.font = `600 ${fs}px "Segoe UI", Roboto, Arial, sans-serif`;
+  g.textBaseline = 'middle';
+  const unit = '© ' + name + '     ·     ', uw = Math.max(10, g.measureText(unit).width), y = h * WM_POS;
+  g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = fs * .2; g.shadowOffsetY = fs * .04;
+  g.fillStyle = `rgba(255,255,255,${WM_ALPHA})`;
+  for (let x = -uw * .35; x < w; x += uw) g.fillText(unit, x, y);
+  return c;
+}
+function wmUrl(url, name) {
+  const key = name + '|' + url;
+  if (wmCache.has(key)) return wmCache.get(key);
+  const p = (async () => {
+    const r = await fetch(url, { mode: 'cors', referrerPolicy: 'no-referrer' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const bu = URL.createObjectURL(await r.blob());
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('decode')); i.src = bu; });
+      const cv = wmCanvas(img, name || 'Việt Photo Booking');
+      return await new Promise((ok, no) => cv.toBlob(b => b ? ok(URL.createObjectURL(b)) : no(new Error('toBlob')), 'image/jpeg', .92));
+    } finally { URL.revokeObjectURL(bu); }
+  })();
+  p.catch(() => wmCache.delete(key));
+  wmCache.set(key, p);
+  if (wmCache.size > 150) { const k = wmCache.keys().next().value; wmCache.get(k).then(URL.revokeObjectURL, () => {}); wmCache.delete(k); }
+  return p;
+}
+function wmApply(img, url, name) {   // gán ảnh đã đóng dấu; nếu không đóng dấu được thì dùng ảnh gốc và khóa lưu nhanh
+  if (!url) return;
+  const tok = img._wmTok = (img._wmTok || 0) + 1;
+  img.classList.remove('wm-fb');
+  wmUrl(url, name).then(u => { if (img._wmTok === tok) img.src = u; })
+    .catch(e => { console.warn('Đóng dấu ảnh lỗi, dùng ảnh gốc:', e); if (img._wmTok === tok) { img.classList.add('wm-fb'); img.src = url; } });
+}
+function wmScan(root) {
+  root.querySelectorAll('img[data-wm]:not([data-wmd])').forEach(im => { im.dataset.wmd = 1; wmApply(im, im.dataset.wm, im.dataset.wmo); });
+}
+['#side', '#lb'].forEach(sel => { const el = $(sel); if (el) new MutationObserver(() => wmScan(el)).observe(el, { childList: true, subtree: true }); });
+['contextmenu', 'dragstart'].forEach(ev => document.addEventListener(ev, e => { if (e.target.classList && e.target.classList.contains('wm-fb')) e.preventDefault(); }));
 
 /* ══════════ KHỞI ĐỘNG ══════════ */
 function onData(list) {
